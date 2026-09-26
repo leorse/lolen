@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/gui/gui_lol.h"
 #include "kyra/engine/lol.h"
@@ -2946,4 +2945,3 @@ Common::String GUI_LoL::getMenuItemLabel(const MenuItem &menuItem) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL

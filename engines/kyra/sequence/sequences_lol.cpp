@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
@@ -34,10 +33,11 @@ namespace Kyra {
 
 int LoLEngine::processPrologue() {
 	// There are two non-interactive demos (one which plays the intro and another one) which plays a number of specific scenes.
-	// We try to identify the latter one by looking for a specific file.
+	// We try to identify the latter one by looking for a specific file. That one relied on the Kyrandia 2 sequence player,
+	// which is not part of this build.
 	_res->loadPakFile("GENERAL.PAK");
 	if (_flags.isDemo && _res->exists("scene1.cps")) {
-		return playDemo();
+		error("This non-interactive Lands of Lore demo is not supported");
 	} else {
 		setupPrologueData(true);
 		bool hasSave = false;
@@ -1569,4 +1569,3 @@ void LoLEngine::loadOutroShapes(int file, uint8 **storage) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL

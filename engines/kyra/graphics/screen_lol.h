@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #ifndef KYRA_SCREEN_LOL_H
 #define KYRA_SCREEN_LOL_H
@@ -102,4 +101,3 @@ private:
 
 #endif
 
-#endif // ENABLE_LOL

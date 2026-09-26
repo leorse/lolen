@@ -54,7 +54,6 @@ public:
 	kType getMusicType() const override { return _type; }
 
 	bool init() override;
-	void process() override;
 
 	void updateVolumeSettings() override;
 
@@ -92,12 +91,6 @@ private:
 	int _sfxPlayingSound;
 
 	Common::Path _soundFileLoaded;
-
-	int _numSoundTriggers;
-	const int *_soundTriggers;
-
-	static const int _kyra1NumSoundTriggers;
-	static const int _kyra1SoundTriggers[];
 };
 
 } // End of namespace Kyra

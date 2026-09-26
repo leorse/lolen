@@ -23,7 +23,8 @@
 #define KYRA_SCREEN_V2_H
 
 #include "kyra/graphics/screen.h"
-#include "kyra/engine/kyra_v2.h"
+#include "kyra/kyra_v1.h"
+#include "kyra/graphics/wsamovie.h"
 
 namespace Kyra {
 

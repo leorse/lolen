@@ -19,13 +19,13 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #ifndef KYRA_LOL_H
 #define KYRA_LOL_H
 
 #include "kyra/engine/kyra_rpg.h"
 #include "kyra/script/script_tim.h"
+#include "kyra/graphics/wsamovie.h"
 #include "kyra/script/script.h"
 #include "kyra/gui/gui_lol.h"
 #include "kyra/text/text_lol.h"
@@ -273,8 +273,6 @@ public:
 
 	static Common::Array<Common::Keymap *> initKeymaps();
 
-	void pauseEngineIntern(bool pause) override;
-
 	Screen *screen() override;
 	GUI *gui() const override;
 
@@ -406,10 +404,6 @@ private:
 
 	static const int _outroMonsterScaleTableX[];
 	static const int _outroMonsterScaleTableY[];
-
-	// Non-interactive demo
-	int playDemo();
-	void pauseDemoPlayer(bool toggle);
 
 	// timers
 	void setupTimers() override;
@@ -1307,7 +1301,6 @@ private:
 	// unneeded
 	void setWalkspeed(uint8) override {}
 	void removeHandItem() override {}
-	bool lineIsPassable(int, int) override { return false; }
 
 	// save
 	Common::Error loadGameState(int slot) override;
@@ -1350,4 +1343,3 @@ private:
 
 #endif
 
-#endif // ENABLE_LOL

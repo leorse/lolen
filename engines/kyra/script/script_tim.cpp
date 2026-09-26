@@ -23,10 +23,8 @@
 #include "kyra/resource/resource.h"
 #include "kyra/sound/sound.h"
 
-#ifdef ENABLE_LOL
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
-#endif // ENABLE_LOL
 
 #include "common/formats/iff_container.h"
 #include "common/system.h"
@@ -89,7 +87,7 @@ TIMInterpreter::TIMInterpreter(KyraEngine_v1 *engine, Screen_v2 *screen_v2, OSys
 	_textDisplayed = false;
 	_textAreaBuffer = new uint8[320*40];
 	assert(_textAreaBuffer);
-	if ((_vm->gameFlags().platform == Common::kPlatformPC98 || _vm->gameFlags().isDemo) && _vm->game() == GI_LOL)
+	if (_vm->gameFlags().platform == Common::kPlatformPC98 || _vm->gameFlags().isDemo)
 		_drawPage2 = 0;
 	else
 		_drawPage2 = 8;
@@ -175,7 +173,7 @@ TIM *TIMInterpreter::load(const char *filename, const Common::Array<const TIMOpc
 
 	Common::strlcpy(_tim->filename, filename, 13);
 
-	_tim->isLoLOutro = (_vm->game() == GI_LOL) && !scumm_stricmp(filename, "LOLFINAL.TIM");
+	_tim->isLoLOutro = !scumm_stricmp(filename, "LOLFINAL.TIM");
 	_tim->lolCharacter = 0;
 
 	TIM *r = _tim;
@@ -314,7 +312,7 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags) {
 	if (flags < 0) {
 		static const uint8 colorMap[] = { 0x00, 0xF0, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-		_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN && _vm->gameFlags().gameID == GI_LOL ? Screen::FID_CHINESE_FNT :
+		_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT :
 				 sjisMode ? Screen::FID_SJIS_TEXTMODE_FNT : Screen::FID_8_FNT);
 		_screen->setTextColorMap(colorMap);
 		_screen->_charSpacing = -2;
@@ -364,7 +362,7 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags) {
 	if (flags < 0) {
 		static const uint8 colorMap[] = { 0x00, 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0x00, 0x00, 0x00, 0x00 };
 
-		_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN && _vm->gameFlags().gameID == GI_LOL ? Screen::FID_CHINESE_FNT :
+		_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT :
 				 sjisMode ? Screen::FID_SJIS_TEXTMODE_FNT : Screen::FID_INTRO_FNT);
 		_screen->setTextColorMap(colorMap);
 		_screen->_charSpacing = 0;
@@ -383,7 +381,7 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags, uint8 color) {
 	if (flags == 255)
 		return;
 
-	_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN && _vm->gameFlags().gameID == GI_LOL ? Screen::FID_CHINESE_FNT :
+	_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT :
 			 (_vm->gameFlags().lang == Common::JA_JPN && _vm->gameFlags().use16ColorMode) ? Screen::FID_SJIS_TEXTMODE_FNT : Screen::FID_INTRO_FNT);
 
 	static const uint8 colorMap[] = { 0x00, 0xA0, 0xA1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -469,7 +467,7 @@ void TIMInterpreter::setupTextPalette(uint index, int fadePalette) {
 int TIMInterpreter::initAnimStruct(int index, const char *filename, int x, int y, int, int offscreenBuffer, uint16 wsaFlags) {
 	Movie *wsa = nullptr;
 
-	const bool isLoLDemo = _vm->gameFlags().isDemo && !_vm->gameFlags().isTalkie && _vm->game() == GI_LOL;
+	const bool isLoLDemo = _vm->gameFlags().isDemo && !_vm->gameFlags().isTalkie;
 
 	if (isLoLDemo || _vm->gameFlags().platform == Common::kPlatformPC98 || _currentTim->isLoLOutro)
 		_drawPage2 = 0;
@@ -756,8 +754,7 @@ int TIMInterpreter::cmd_loadSoundFile(const uint16 *param) {
 	const char *file = (const char *)(_currentTim->text + READ_LE_UINT16(_currentTim->text + (param[0]<<1)));
 
 	_vm->sound()->loadSoundFile(file);
-	if (_vm->game() == GI_LOL)
-		_vm->sound()->loadSfxFile(file);
+	_vm->sound()->loadSfxFile(file);
 
 	return 1;
 }
@@ -842,7 +839,6 @@ int TIMInterpreter::cmd_stopFuncNow(const uint16 *param) {
 
 // TODO: Consider moving to another file
 
-#ifdef ENABLE_LOL
 // LOL version of the TIM interpreter
 
 TIMInterpreter_LoL::TIMInterpreter_LoL(LoLEngine *engine, Screen_v2 *screen_v2, OSystem *system) :
@@ -1103,6 +1099,5 @@ int TIMInterpreter_LoL::cmd_dialogueBox(const uint16 *param) {
 
 	return -3;
 }
-#endif // ENABLE_LOL
 
 } // End of namespace Kyra

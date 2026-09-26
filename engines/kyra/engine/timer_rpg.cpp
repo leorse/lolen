@@ -19,7 +19,6 @@
  *
  */
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 
 #include "kyra/engine/kyra_rpg.h"
 #include "kyra/engine/timer.h"
@@ -68,16 +67,10 @@ void KyraRpgEngine::timerProcessDoors(int timerNum) {
 		else if (v == -1)
 			snd = 4;
 
-		if (_flags.gameID == GI_LOL) {
-			if (!(_updateFlags & 1)) {
-				snd_processEnvironmentalSoundEffect(snd + 28, b);
-				if (!checkSceneUpdateNeed(b))
-					snd_updateEnvironmentalSfx(0);
-			}
-		} else {
-			checkSceneUpdateNeed(b);
-			if (!isSpecialDoor(b))
-				snd_updateEnvironmentalSfx(snd);
+		if (!(_updateFlags & 1)) {
+			snd_processEnvironmentalSoundEffect(snd + 28, b);
+			if (!checkSceneUpdateNeed(b))
+				snd_updateEnvironmentalSfx(0);
 		}
 
 		if (flg & 0x30)
@@ -87,4 +80,3 @@ void KyraRpgEngine::timerProcessDoors(int timerNum) {
 
 } // namespace Kyra
 
-#endif

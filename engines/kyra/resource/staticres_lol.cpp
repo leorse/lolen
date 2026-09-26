@@ -25,7 +25,6 @@
 #include "kyra/gui/gui_lol.h"
 #include "kyra/sound/sound_intern.h"
 
-#ifdef ENABLE_LOL
 
 namespace Kyra {
 
@@ -467,11 +466,11 @@ void LoLEngine::initStaticResource() {
 }
 
 void GUI_LoL::initStaticData() {
-	GUI_V2_BUTTON(_scrollUpButton, 20, 96, 0, 1, 1, 1, 0x4487, 0, 0, 0, 25, 16, 0xFE, 0x01, 0xFE, 0x01, 0xFE, 0x01, 0);
-	GUI_V2_BUTTON(_scrollDownButton, 21, 98, 0, 1, 1, 1, 0x4487, 0, 0, 0, 25, 16, 0xFE, 0x01, 0xFE, 0x01, 0xFE, 0x01, 0);
+	GUI_LOL_BUTTON(_scrollUpButton, 20, 96, 0, 1, 1, 1, 0x4487, 0, 0, 0, 25, 16, 0xFE, 0x01, 0xFE, 0x01, 0xFE, 0x01, 0);
+	GUI_LOL_BUTTON(_scrollDownButton, 21, 98, 0, 1, 1, 1, 0x4487, 0, 0, 0, 25, 16, 0xFE, 0x01, 0xFE, 0x01, 0xFE, 0x01, 0);
 
 	for (uint i = 0; i < ARRAYSIZE(_menuButtons); ++i)
-		GUI_V2_BUTTON(_menuButtons[i], i, 0, 0, 0, 0, 0, 0x4487, 0, 0, 0, 0, 0, 0xFE, 0x01, 0xFE, 0x01, 0xFE, 0x01, 0);
+		GUI_LOL_BUTTON(_menuButtons[i], i, 0, 0, 0, 0, 0, 0x4487, 0, 0, 0, 0, 0, 0xFE, 0x01, 0xFE, 0x01, 0xFE, 0x01, 0);
 
 	if (_vm->gameFlags().isTalkie)
 		GUI_LOL_MENU(_mainMenu, 9, 0x4000, 0, 7, -1, -1, -1, -1);
@@ -904,4 +903,3 @@ const int LoLEngine::_outroMonsterScaleTableY[] = {
 
 } // End of namespace Kyra
 
-#endif

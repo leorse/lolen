@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
@@ -1579,4 +1578,3 @@ void LoLEngine::drawSpecialGuiShape(int pageNum) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL

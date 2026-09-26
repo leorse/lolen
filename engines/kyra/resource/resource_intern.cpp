@@ -25,8 +25,6 @@
 #include "common/endian.h"
 #include "common/memstream.h"
 #include "common/substream.h"
-#include "common/macresman.h"
-#include "common/compression/stuffit.h"
 
 namespace Kyra {
 
@@ -1211,19 +1209,6 @@ Common::Archive *InstallerLoader::load(Resource *owner, const Common::Path &file
 
 	archives.clear();
 	return new CachedArchive(fileList);
-}
-
-Common::Archive *StuffItLoader::load(Resource *owner, const Common::Path &filename) {
-	return load(owner, Common::MacResManager::openFileOrDataFork(filename), filename.toString('/'));
-}
-
-Common::Archive *StuffItLoader::load(Resource *owner, Common::SeekableReadStream *stream, const Common::String &debugName) {
-	if (stream) {
-		Common::Archive *archive = Common::createStuffItArchive(stream, true);
-		return archive;
-	}
-
-	error("StuffItLoader::load: Could not load %s", debugName.c_str());
 }
 
 CmpVocDecoder::CmpVocDecoder() {

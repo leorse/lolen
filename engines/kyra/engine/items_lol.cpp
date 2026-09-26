@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
@@ -590,4 +589,3 @@ int LoLEngine::checkSceneForItems(uint16 *blockDrawObjects, int color) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL

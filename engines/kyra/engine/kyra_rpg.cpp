@@ -19,7 +19,6 @@
  *
  */
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 
 #include "kyra/engine/kyra_rpg.h"
 #include "kyra/sound/sound.h"
@@ -34,7 +33,7 @@
 
 namespace Kyra {
 
-KyraRpgEngine::KyraRpgEngine(OSystem *system, const GameFlags &flags) : KyraEngine_v1(system, flags), _numFlyingObjects(_flags.gameID == GI_LOL ? 8 : 10) {
+KyraRpgEngine::KyraRpgEngine(OSystem *system, const GameFlags &flags) : KyraEngine_v1(system, flags), _numFlyingObjects(8) {
 	_txt = 0;
 	_mouseClick = 0;
 	_preserveEvents = _buttonListChanged = false;
@@ -145,10 +144,8 @@ KyraRpgEngine::KyraRpgEngine(OSystem *system, const GameFlags &flags) : KyraEngi
 
 	_buttonFont = Screen::FID_6_FNT;
 	if (_flags.platform == Common::kPlatformPC98)
-		_buttonFont = _flags.gameID == GI_LOL ? Screen::FID_SJIS_TEXTMODE_FNT : Screen::FID_SJIS_FNT;
-	else if (_flags.gameID == GI_EOB2 && _flags.platform == Common::kPlatformFMTowns)
-		_buttonFont = Screen::FID_8_FNT;
-	else if (_flags.lang == Common::Language::ZH_TWN && _flags.gameID == GI_LOL)
+		_buttonFont = Screen::FID_SJIS_TEXTMODE_FNT;
+	else if (_flags.lang == Common::Language::ZH_TWN)
 		_buttonFont = Screen::FID_CHINESE_FNT;
 }
 
@@ -210,7 +207,7 @@ Common::Error KyraRpgEngine::init() {
 
 	initStaticResource();
 
-	_envSfxDistThreshold = ((_flags.gameID == GI_EOB2 && (_sound->getSfxType() == Sound::kTowns || _sound->getSfxType() == Sound::kPC98)) || _sound->getSfxType() == Sound::kAdLib || _sound->getSfxType() == Sound::kPCSpkr) ? 15 : (_sound->getSfxType() == Sound::kAmiga ? 4 : 3);
+	_envSfxDistThreshold = (_sound->getSfxType() == Sound::kAdLib || _sound->getSfxType() == Sound::kPCSpkr) ? 15 : 3;
 
 	_dialogueButtonLabelColor1 = guiSettings()->buttons.labelColor1;
 	_dialogueButtonLabelColor2 = guiSettings()->buttons.labelColor2;
@@ -248,28 +245,19 @@ void KyraRpgEngine::drawDialogueButtons() {
 
 	for (int i = 0; i < _dialogueNumButtons; i++) {
 		int x = _dialogueButtonPosX[i];
-		if (_flags.gameID == GI_LOL && _flags.use16ColorMode) {
+		if (_flags.use16ColorMode) {
 			gui_drawBox(x, ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) & ~7) - 1, 74, 10, 0xEE, 0xCC, -1);
 			screen()->printText(_dialogueButtonString[i], (x + 37 - (screen()->getTextWidth(_dialogueButtonString[i])) / 2) & ~3,
 			                    ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) + 2) & ~7, _dialogueHighlightedButton == i ? 0xC1 : 0xE1, 0);
 		} else {
 			int yOffset = guiSettings()->buttons.txtOffsY;
-			if (_flags.gameID == GI_LOL && _flags.lang == Common::JA_JPN && (_dialogueButtonString[i][0] & 0x80))
+			if (_flags.lang == Common::JA_JPN && (_dialogueButtonString[i][0] & 0x80))
 				yOffset = 0;
 			screen()->set16bitShadingLevel(4);
 			gui_drawBox(x, (_dialogueButtonYoffs + _dialogueButtonPosY[i]), _dialogueButtonWidth, guiSettings()->buttons.height, guiSettings()->colors.frame1, guiSettings()->colors.frame2, guiSettings()->colors.fill);
 			screen()->set16bitShadingLevel(0);
-#if defined(ENABLE_EOB)
-			if (guiSettings()->buttons.labelShadow && _flags.gameID != GI_LOL) {
-				((Screen_EoB*)screen())->printShadedText(_dialogueButtonString[i], x + (_dialogueButtonWidth >> 1) - (screen()->getTextWidth(_dialogueButtonString[i])) / 2,
-					(_dialogueButtonYoffs + _dialogueButtonPosY[i]) + yOffset, _dialogueHighlightedButton == i ? _dialogueButtonLabelColor1 : _dialogueButtonLabelColor2, 0, guiSettings()->colors.guiColorBlack);
-			} else {
-#endif
-				screen()->printText(_dialogueButtonString[i], x + (_dialogueButtonWidth >> 1) - (screen()->getTextWidth(_dialogueButtonString[i])) / 2,
-					(_dialogueButtonYoffs + _dialogueButtonPosY[i]) + yOffset, _dialogueHighlightedButton == i ? _dialogueButtonLabelColor1 : _dialogueButtonLabelColor2, 0);
-#if defined(ENABLE_EOB)
-			}
-#endif
+			screen()->printText(_dialogueButtonString[i], x + (_dialogueButtonWidth >> 1) - (screen()->getTextWidth(_dialogueButtonString[i])) / 2,
+				(_dialogueButtonYoffs + _dialogueButtonPosY[i]) + yOffset, _dialogueHighlightedButton == i ? _dialogueButtonLabelColor1 : _dialogueButtonLabelColor2, 0);
 		}
 	}
 	if (cs != -1)
@@ -284,7 +272,7 @@ uint16 KyraRpgEngine::processDialogue() {
 
 	for (int i = 0; i < _dialogueNumButtons; i++) {
 		int x = _dialogueButtonPosX[i] + _dialogueButtonXoffs;
-		int y = ((_flags.gameID == GI_LOL && _flags.use16ColorMode) ? ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) & ~7) - 1 : (_dialogueButtonYoffs + _dialogueButtonPosY[i]));
+		int y = (_flags.use16ColorMode ? ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) & ~7) - 1 : (_dialogueButtonYoffs + _dialogueButtonPosY[i]));
 		Common::Point p = getMousePos();
 		if (posWithinRect(p.x, p.y, x, y, x + _dialogueButtonWidth, y + guiSettings()->buttons.height)) {
 			_dialogueHighlightedButton = i;
@@ -317,10 +305,10 @@ uint16 KyraRpgEngine::processDialogue() {
 		if (e)
 			gui_notifyButtonListChanged();
 
-		if ((_flags.gameID == GI_LOL && (e == 200 || e == 202)) || (_flags.gameID != GI_LOL && (e == 199 || e == 201))) {
+		if (e == 200 || e == 202) {
 			for (int i = 0; i < _dialogueNumButtons; i++) {
 				int x = _dialogueButtonPosX[i];
-				int y = ((_flags.gameID == GI_LOL && _flags.use16ColorMode) ? ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) & ~7) - 1 : (_dialogueButtonYoffs + _dialogueButtonPosY[i]));
+				int y = (_flags.use16ColorMode ? ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) & ~7) - 1 : (_dialogueButtonYoffs + _dialogueButtonPosY[i]));
 				Common::Point p = getMousePos();
 				if (posWithinRect(p.x, p.y, x, y, x + _dialogueButtonWidth, y + guiSettings()->buttons.height)) {
 					_dialogueHighlightedButton = i;
@@ -350,20 +338,18 @@ uint16 KyraRpgEngine::processDialogue() {
 
 	stopPortraitSpeechAnim();
 
-	if (game() == GI_LOL) {
-		if (!textEnabled() && _currentControlMode) {
-			screen()->setScreenDim(5);
-			const ScreenDim *d = screen()->getScreenDim(5);
-			screen()->fillRect(d->sx, d->sy + d->h - 9, d->sx + d->w - 1, d->sy + d->h - 1, d->col2);
-		} else {
-			const ScreenDim *d = screen()->_curDim;
-			if (gameFlags().use16ColorMode)
-				screen()->fillRect(d->sx, d->sy, d->sx + d->w - 3, d->sy + d->h - 2, d->col2);
-			else
-				screen()->fillRect(d->sx, d->sy, d->sx + d->w - 2, d->sy + d->h - 1, d->col2);
-			txt()->clearDim(4);
-			txt()->resetDimTextPositions(4);
-		}
+	if (!textEnabled() && _currentControlMode) {
+		screen()->setScreenDim(5);
+		const ScreenDim *d = screen()->getScreenDim(5);
+		screen()->fillRect(d->sx, d->sy + d->h - 9, d->sx + d->w - 1, d->sy + d->h - 1, d->col2);
+	} else {
+		const ScreenDim *d = screen()->_curDim;
+		if (gameFlags().use16ColorMode)
+			screen()->fillRect(d->sx, d->sy, d->sx + d->w - 3, d->sy + d->h - 2, d->col2);
+		else
+			screen()->fillRect(d->sx, d->sy, d->sx + d->w - 2, d->sy + d->h - 1, d->col2);
+		txt()->clearDim(4);
+		txt()->resetDimTextPositions(4);
 	}
 
 	return res;
@@ -404,16 +390,7 @@ bool KyraRpgEngine::snd_processEnvironmentalSoundEffect(int soundId, int block) 
 
 	_environmentSfx = soundId;
 
-	if (_flags.gameID == GI_EOB2 && _flags.platform == Common::kPlatformFMTowns)
-		_environmentSfxVol = dist ? (16 - dist) * 8 - 1 : 127;
-	else if (_flags.gameID == GI_EOB2 && _flags.platform == Common::kPlatformPC98)
-		_environmentSfxVol = (15 - dist) * 6 + 37;
-	else if (_flags.platform == Common::kPlatformAmiga)
-		_environmentSfxVol = dist ? (soundId != 13 ? dist : (dist >= 4) ? 4 : dist) : 1;
-	else if (_flags.platform == Common::kPlatformSegaCD)
-		_environmentSfxVol = dist < 3 ? 15 - dist : 11;
-	else
-		_environmentSfxVol = (15 - ((block || (_flags.gameID == GI_LOL && dist < 2)) ? dist : 0)) << 4;
+	_environmentSfxVol = (15 - ((block || dist < 2) ? dist : 0)) << 4;
 
 	return true;
 }
@@ -424,4 +401,3 @@ void KyraRpgEngine::snd_updateEnvironmentalSfx(int soundId) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_EOB || ENABLE_LOL

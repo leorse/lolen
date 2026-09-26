@@ -109,7 +109,7 @@ char *TextDisplayer::preprocessString(const char *str) {
 	static const uint16 limKor[2] = { 240, 480 };
 	const uint16 *lim = (_vm->gameFlags().lang == Common::KO_KOR) ? limKor : limDef;
 
-	Screen::FontId curFont = _screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN && _vm->gameFlags().gameID == GI_LOL ? Screen::FID_CHINESE_FNT :
+	Screen::FontId curFont = _screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT :
 						  _vm->gameFlags().lang == Common::KO_KOR ? Screen::FID_KOREAN_FNT : Screen::FID_8_FNT);
 	_screen->_charSpacing = -2;
 	int textWidth = _screen->getTextWidth(p);
@@ -146,11 +146,7 @@ int TextDisplayer::buildMessageSubstrings(const char *str) {
 		} else {
 			_talkSubstrings[currentLine * TALK_SUBSTRING_LEN + pos] = *str;
 			++pos;
-			if (_vm->game() == GI_KYRA2 && _vm->gameFlags().lang == Common::ZH_TWN && pos == 32) {
-				_talkSubstrings[currentLine * TALK_SUBSTRING_LEN + pos] = '\0';
-				++currentLine;
-				pos = 0;
-			} else if (pos >= TALK_SUBSTRING_LEN - 2) {
+			if (pos >= TALK_SUBSTRING_LEN - 2) {
 				pos = TALK_SUBSTRING_LEN - 2;
 			}
 		}
@@ -174,7 +170,7 @@ int TextDisplayer::getWidestLineWidth(int linesCount) {
 }
 
 void TextDisplayer::calcWidestLineBounds(int &x1, int &x2, int w, int cx) {
-	int margin = (_vm->game() == GI_KYRA2 && _vm->gameFlags().lang == Common::ZH_TWN) ? 8 : 12;
+	int margin = 12;
 	x1 = cx - w / 2;
 	if (x1 + w >= Screen::SCREEN_W - margin) {
 		x1 = Screen::SCREEN_W - margin - w - 1;

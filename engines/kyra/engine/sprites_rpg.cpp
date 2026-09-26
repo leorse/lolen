@@ -19,7 +19,6 @@
  *
  */
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 
 #include "kyra/engine/kyra_rpg.h"
 
@@ -42,4 +41,3 @@ int KyraRpgEngine::getBlockDistance(uint16 block1, uint16 block2) {
 
 } // namespace Kyra
 
-#endif

@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
@@ -583,4 +582,3 @@ void LoLEngine::releaseMonsterTempData(LevelTempData *tmp) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL

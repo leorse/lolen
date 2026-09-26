@@ -27,9 +27,6 @@
 namespace Kyra {
 
 class KyraEngine_v1;
-class KyraEngine_LoK;
-class KyraEngine_v2;
-class KyraEngine_HoF;
 
 class Debugger : public ::GUI::Debugger {
 public:
@@ -51,49 +48,6 @@ protected:
 	bool cmdSetTimerCountdown(int argc, const char **argv);
 };
 
-class Debugger_LoK : public Debugger {
-public:
-	Debugger_LoK(KyraEngine_LoK *vm);
-
-	void initialize() override;
-protected:
-	KyraEngine_LoK *_vm;
-
-	bool cmdEnterRoom(int argc, const char **argv);
-	bool cmdListScenes(int argc, const char **argv);
-	bool cmdGiveItem(int argc, const char **argv);
-	bool cmdListBirthstones(int argc, const char **argv);
-};
-
-class Debugger_v2 : public Debugger {
-public:
-	Debugger_v2(KyraEngine_v2 *vm);
-	~Debugger_v2() override {}
-
-	void initialize() override;
-protected:
-	KyraEngine_v2 *_vm;
-
-	bool cmdEnterScene(int argc, const char **argv);
-	bool cmdListScenes(int argc, const char **argv);
-	bool cmdSceneInfo(int argc, const char **argv);
-	bool cmdCharacterInfo(int argc, const char **argv);
-	bool cmdSceneToFacing(int argc, const char **argv);
-	bool cmdGiveItem(int argc, const char **argv);
-};
-
-class Debugger_HoF : public Debugger_v2 {
-public:
-	Debugger_HoF(KyraEngine_HoF *vm);
-
-	void initialize() override;
-protected:
-	KyraEngine_HoF *_vm;
-
-	bool cmdPasscodes(int argc, const char **argv);
-};
-
-#ifdef ENABLE_LOL
 class LoLEngine;
 
 class Debugger_LoL : public Debugger {
@@ -103,32 +57,6 @@ public:
 protected:
 	LoLEngine *_vm;
 };
-#endif // ENABLE_LOL
-
-#ifdef ENABLE_EOB
-class EoBCoreEngine;
-
-class Debugger_EoB : public Debugger {
-public:
-	Debugger_EoB(EoBCoreEngine *vm);
-
-	void initialize() override;
-protected:
-	EoBCoreEngine *_vm;
-
-	bool cmdImportSaveFile(int argc, const char **argv);
-	bool cmdSaveOriginal(int argc, const char **argv);
-	bool cmdListMonsters(int argc, const char **argv);
-	bool cmdShowPosition(int argc, const char **argv);
-	bool cmdSetPosition(int argc, const char **argv);
-	bool cmdPrintMap(int argc, const char **argv);
-	bool cmdOpenDoor(int argc, const char **argv);
-	bool cmdCloseDoor(int argc, const char **argv);
-	bool cmdListFlags(int argc, const char **argv);
-	bool cmdSetFlag(int argc, const char **argv);
-	bool cmdClearFlag(int argc, const char **argv);
-};
-#endif // ENABLE_EOB
 
 } // End of namespace Kyra
 

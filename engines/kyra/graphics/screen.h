@@ -294,82 +294,6 @@ private:
 	const uint16 _pitch;
 };
 
-class JohabFontLoK final : public Font {
-public:
-	JohabFontLoK(Font *&font8fat, const uint16 *lookupTable, uint32 lookupTableSize);
-	~JohabFontLoK() override;
-
-	enum {
-		kNumJongseong = 191,
-		kNumJungseong = 85,
-		kNumChoseong = 109
-	};
-
-	bool load(Common::SeekableReadStream &data) override;
-	Type getType() const override { return kJohab; }
-	int getHeight() const override { return _height; }
-	int getWidth() const override { return _width; }
-	int getCharWidth(uint16 c) const override;
-	int getCharHeight(uint16 c) const override;
-	void setColorMap(const uint8 *src) override;
-	void drawChar(uint16 c, byte *dst, int pitch, int) const override;
-
-private:
-	const uint8 *createGlyph(uint16 chr) const;
-	void processColorMap();
-	void renderGlyph(byte *dst, const uint8 *glyph, uint8 col, int pitch) const;
-
-	int _width, _height;
-	const uint8 *_colorMap;
-
-	Font *&_font8fat;
-	const uint8 *_fileData;
-	const uint8 *_glyphData[3];
-	const uint16 *_2byteTables[7];
-	uint8 *_glyphTemp;
-};
-
-class ChineseOneByteFontLoK final : public ChineseFont {
-public:
-	ChineseOneByteFontLoK(int pitch);
-private:
-	bool hasGlyphForCharacter(uint16 c) const override { return !(c & 0x80); }
-	uint32 getFontOffset(uint16 c) const override { return (c & 0x7F) * 14; }
-	void processColorMap() override;
-};
-
-class ChineseTwoByteFontLoK final : public ChineseFont {
-public:
-	ChineseTwoByteFontLoK(int pitch, const uint16 *lookupTable, uint32 lookupTableSize);
-private:
-	bool hasGlyphForCharacter(uint16 c) const override;
-	uint32 getFontOffset(uint16 c) const override;
-	void processColorMap() override;
-
-	const uint16 *_lookupTable;
-	uint32 _lookupTableSize;
-};
-
-class ChineseOneByteFontMR final : public ChineseFont {
-public:
-	ChineseOneByteFontMR(int pitch) : ChineseFont(pitch, 7, 14, 9, 14, 0, 2) {}
-private:
-	bool hasGlyphForCharacter(uint16 c) const override { return (c == 0x6187) || !(c & 0x80); }
-	uint32 getFontOffset(uint16 c) const override { return ((c == 0x6187) ? 128 : (c & 0x7F)) * 14; }
-	void processColorMap() override;
-};
-
-class ChineseTwoByteFontMR final : public ChineseFont {
-public:
-	ChineseTwoByteFontMR(int pitch) : ChineseFont(pitch, 15, 14, 18, 14, 0, 2) {}
-private:
-	bool hasGlyphForCharacter(uint16 c) const override { return (c != 0x6187) && (c & 0x80); }
-	uint32 getFontOffset(uint16 c) const override;
-	void processColorMap() override;
-};
-
-#ifdef ENABLE_LOL
-
 class ChineseOneByteFontLoL final : public ChineseFont {
 public:
 	ChineseOneByteFontLoL(int pitch) : ChineseFont(pitch, 8, 14, 8, 16, 0, 0) { _pixelColorShading = false; }
@@ -392,45 +316,6 @@ private:
 	void processColorMap() override;
 };
 
-#endif
-
-class ChineseOneByteFontHOF final : public ChineseFont {
-public:
-	ChineseOneByteFontHOF(int pitch) : ChineseFont(pitch, 8, 14, 9, 15, 0, 0) {}
-private:
-	bool hasGlyphForCharacter(uint16 c) const override { return !(c & 0x80); }
-	uint32 getFontOffset(uint16 c) const override { return (c & 0x7F) * 14; }
-	void processColorMap() override;
-};
-
-class ChineseTwoByteFontHOF final : public ChineseFont {
-public:
-	ChineseTwoByteFontHOF(int pitch) : ChineseFont(pitch, 16, 14, 18, 15, 0, 0) {}
-private:
-	bool hasGlyphForCharacter(uint16 c) const override { return (c & 0x80); }
-	uint32 getFontOffset(uint16 c) const override;
-	void processColorMap() override;
-};
-
-class KoreanOneByteFontHOF final : public ChineseFont {
-public:
-	KoreanOneByteFontHOF(int pitch) : ChineseFont(pitch, 8, 9, 8, 10, 0, 0) {}
-	Type getType() const override { return kJohab; }
-private:
-	bool hasGlyphForCharacter(uint16 c) const override { return !(c & 0x80); }
-	uint32 getFontOffset(uint16 c) const override { return (c & 0x7F) * 9; }
-	void processColorMap() override;
-};
-
-class KoreanTwoByteFontHOF final : public ChineseFont {
-public:
-	KoreanTwoByteFontHOF(int pitch) : ChineseFont(pitch, 10, 9, 10, 10, 0, 0) {}
-	Type getType() const override { return kJohab; }
-private:
-	bool hasGlyphForCharacter(uint16 c) const override { return (c & 0x80); }
-	uint32 getFontOffset(uint16 c) const override;
-	void processColorMap() override;
-};
 
 class MultiSubsetFont final : public Font {
 public:

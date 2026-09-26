@@ -44,7 +44,6 @@ static const DebugChannelDef debugFlagList[] = {
 };
 
 const char *const directoryGlobs[] = {
-	"malcolm",
 	"data", // LOL GOG release
 	"runtime",
 	nullptr
@@ -73,14 +72,7 @@ public:
 	}
 
 	const char *getOriginalCopyright() const override {
-		return "The Legend of Kyrandia (C) Westwood Studios"
-#ifdef ENABLE_LOL
-		       "\nLands of Lore (C) Westwood Studios"
-#endif
-#ifdef ENABLE_EOB
-		       "\nEye of the Beholder (C) TSR, Inc., (C) Strategic Simulations, Inc."
-#endif
-		       ;
+		return "Lands of Lore (C) Westwood Studios";
 	}
 };
 

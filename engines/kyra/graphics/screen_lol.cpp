@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/graphics/screen_lol.h"
 #include "kyra/engine/lol.h"
@@ -901,4 +900,3 @@ void ChineseTwoByteFontLoL::processColorMap() {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL

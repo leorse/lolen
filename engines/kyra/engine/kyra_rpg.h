@@ -22,11 +22,10 @@
 #ifndef KYRA_RPG_H
 #define KYRA_RPG_H
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 
 #include "kyra/kyra_v1.h"
-#include "kyra/graphics/screen_eob.h"
-#include "kyra/gui/gui_eob.h"
+#include "kyra/graphics/screen.h"
+#include "kyra/gui/gui.h"
 #include "kyra/text/text_lol.h"
 
 #include "common/keyboard.h"
@@ -556,11 +555,9 @@ protected:
 	// unused
 	void setWalkspeed(uint8) override {}
 	void removeHandItem() override {}
-	bool lineIsPassable(int, int) override { return false; }
 };
 
 } // End of namespace Kyra
 
-#endif // ENABLE_EOB || ENABLE_LOL
 
 #endif

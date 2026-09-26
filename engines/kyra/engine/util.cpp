@@ -20,8 +20,6 @@
  */
 
 #include "common/endian.h"
-#include "common/macresman.h"
-#include "common/punycode.h"
 #include "kyra/engine/util.h"
 
 namespace Kyra {
@@ -287,40 +285,6 @@ Common::String Util::decodeString2(const Common::String &src) {
 	Common::String reslt(tmp);
 	delete[] tmp;
 	return reslt;
-}
-
-Common::Path Util::findMacResourceFile(const char *baseName, const char *suffix) {
-	// The original executable has a TM char as its last character (character
-	// 0xAA from Mac code page). Depending on the emulator or platform used to
-	// copy the file it might have been reencoded to something else. So I look
-	// for multiple versions, also for punycode encoded files and also for the
-	// case where the user might have just removed the last character by
-	// renaming the file.
-
-	const Common::CodePage tryCodePages[] = {
-		Common::kMacRoman,
-		Common::kISO8859_1
-	};
-
-	Common::MacResManager resource;
-	Common::String tryName(baseName);
-	Common::Path fileName;
-
-	for (int i = 0; i < 2; ++i) {
-		for (int ii = 0; ii < ARRAYSIZE(tryCodePages); ++ii) {
-			Common::U32String fn(tryName + suffix, tryCodePages[ii]);
-			fileName = Common::Path(fn.encode(Common::kUtf8));
-			if (resource.exists(fileName))
-				return fileName;
-			fileName = Common::Path(Common::punycode_encodefilename(fn));
-			if (resource.exists(fileName))
-				return fileName;
-		}
-		tryName += "\xAA";
-	}
-
-	fileName.clear();
-	return fileName;
 }
 
 const Util::DOS2JOHABEntry Util::_johabConvTable[52] = {

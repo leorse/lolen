@@ -63,11 +63,7 @@ public:
 		AnimPart *parts;
 	};
 
-#ifdef ENABLE_LOL
 	TimAnimator(LoLEngine *engine, Screen_v2 *screen_v2, OSystem *system, bool useParts);
-#else
-	TimAnimator(KyraEngine_v1 *engine, Screen_v2 *screen_v2, OSystem *system, bool useParts);
-#endif
 	~TimAnimator();
 
 	void init(int animIndex, Movie *wsa, int x, int y, int wsaCopyParams, int frameDelay);
@@ -79,21 +75,15 @@ public:
 	int getAnimX(int animIndex) { return (animIndex >= 0 && animIndex < 6) ? _animations[animIndex].x : 0; }
 	int getAnimY(int animIndex) { return (animIndex >= 0 && animIndex < 6) ? _animations[animIndex].y : 0; }
 
-#ifdef ENABLE_LOL
 	void setupPart(int animIndex, int part, int firstFrame, int lastFrame, int cycles, int nextPart, int partDelay, int f, int sfxIndex, int sfxFrame);
 	void start(int animIndex, int part);
 	void stop(int animIndex);
 	void update(int animIndex);
 	void playPart(int animIndex, int firstFrame, int lastFrame, int delay);
 	int resetLastPart(int animIndex);
-#endif
 
 private:
-#ifdef ENABLE_LOL
 	LoLEngine *_vm;
-#else
-	KyraEngine_v1 *_vm;
-#endif
 	Screen_v2 *_screen;
 	OSystem *_system;
 
@@ -259,7 +249,6 @@ protected:
 #undef cmd_return
 };
 
-#ifdef ENABLE_LOL
 class LoLEngine;
 class Screen_LoL;
 class TIMInterpreter_LoL : public TIMInterpreter {
@@ -298,7 +287,6 @@ private:
 	int cmd_processDialogue(const uint16 *param);
 	int cmd_dialogueBox(const uint16 *param);
 };
-#endif // ENABLE_LOL
 
 } // End of namespace Kyra
 

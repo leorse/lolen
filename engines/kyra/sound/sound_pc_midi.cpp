@@ -62,12 +62,6 @@ SoundMidiPC::SoundMidiPC(KyraEngine_v1 *vm, Audio::Mixer *mixer, MidiDriver *dri
 	// Thus we set "_nativeMT32" for all types except Gerneral MIDI to true.
 	_nativeMT32 = (_type != kMidiGM);
 
-	// KYRA1 does not include any General MIDI tracks, thus we have
-	// to overwrite the internal type with MT32 to get the correct
-	// file extension.
-	if (_vm->game() == GI_KYRA1 && _type == kMidiGM)
-		_type = kMidiMT32;
-
 	// Display a warning about possibly wrong sound when the user only has
 	// a General MIDI device, but the game is setup to use Roland MT32 MIDI.
 	// (This will only happen in The Legend of Kyrandia 1 though, all other
@@ -128,33 +122,26 @@ bool SoundMidiPC::init() {
 	const char* midiFile = nullptr;
 	const char* pakFile = nullptr;
 	if (_nativeMT32 && _type == kMidiMT32) {
-		if (_vm->game() == GI_KYRA1) {
-			midiFile = "INTRO";
-		} else if (_vm->game() == GI_KYRA2) {
-			midiFile = "HOF_SYX";
-			pakFile = "AUDIO.PAK";
-		} else if (_vm->game() == GI_LOL) {
-			midiFile = "LOREINTR";
+		midiFile = "LOREINTR";
 
-			if (_vm->gameFlags().isDemo) {
-				if (_vm->gameFlags().isTalkie) {
-					pakFile = "ISTARTUP.PAK";
-				} else if (_vm->resource()->exists("INTROVOC.PAK")) {
-					// Intro demo
-					pakFile = "INTROVOC.PAK";
-				} else {
-					// Kyra2 SEQ player based demo
-					pakFile = "GENERAL.PAK";
-					midiFile = "LOLSYSEX";
-				}
+		if (_vm->gameFlags().isDemo) {
+			if (_vm->gameFlags().isTalkie) {
+				pakFile = "ISTARTUP.PAK";
+			} else if (_vm->resource()->exists("INTROVOC.PAK")) {
+				// Intro demo
+				pakFile = "INTROVOC.PAK";
 			} else {
-				if (_vm->gameFlags().isTalkie)
-					pakFile =  (_vm->_flags.lang == Common::FR_FRA) ? "FRE/STARTUP.PAK" : (_vm->_flags.lang == Common::DE_DEU ? "GER/STARTUP.PAK" : "ENG/STARTUP.PAK");
-				else
-					pakFile = "INTROVOC.PAK";
+				// SEQ player based demo
+				pakFile = "GENERAL.PAK";
+				midiFile = "LOLSYSEX";
 			}
+		} else {
+			if (_vm->gameFlags().isTalkie)
+				pakFile =  (_vm->_flags.lang == Common::FR_FRA) ? "FRE/STARTUP.PAK" : (_vm->_flags.lang == Common::DE_DEU ? "GER/STARTUP.PAK" : "ENG/STARTUP.PAK");
+			else
+				pakFile = "INTROVOC.PAK";
 		}
-	} else if (_type == kMidiGM && _vm->game() == GI_LOL) {
+	} else if (_type == kMidiGM) {
 		if (_vm->gameFlags().isDemo && _vm->resource()->exists("INTROVOC.PAK")) {
 			// Intro demo
 			midiFile = "LOREINTR";
@@ -243,9 +230,6 @@ void SoundMidiPC::loadSoundFile(const Common::Path &file) {
 		return;
 
 	haltTrack();
-	if (_vm->game() == GI_KYRA1) {
-		stopAllSoundEffects();
-	}
 
 	delete[] _musicFile;
 	uint32 fileSize = 0;
@@ -294,22 +278,10 @@ void SoundMidiPC::loadSoundFile(const Common::Path &file) {
 		_musicFile[0x216C] = 0x00;
 		_musicFile[0x216D] = 0x40;
 	}
-
-	// Since KYRA1 uses the same file for SFX and Music
-	// we setup sfx to play from music file as well
-	if (_vm->game() == GI_KYRA1) {
-		for (int i = 0; i < 3; ++i) {
-			_sfx[i]->loadMusic(_musicFile, fileSize);
-		}
-	}
 }
 
 void SoundMidiPC::loadSfxFile(const Common::Path &file) {
 	Common::StackLock lock(_mutex);
-
-	// Kyrandia 1 doesn't use a special sfx file
-	if (_vm->game() == GI_KYRA1)
-		return;
 
 	Common::Path path = getFileName(file);
 

@@ -29,15 +29,12 @@
 #include "common/list.h"
 #include "common/hash-str.h"
 #include "common/hashmap.h"
-#include "common/macresman.h"
 #include "common/stream.h"
 #include "common/ptr.h"
 #include "common/archive.h"
 
 #include "kyra/kyra_v1.h"
-#include "kyra/engine/darkmoon.h"
 #include "kyra/engine/lol.h"
-#include "kyra/engine/kyra_hof.h"
 
 namespace Kyra {
 
@@ -99,9 +96,6 @@ protected:
 
 	Common::Archive *loadArchive(const Common::String &name, Common::ArchiveMemberPtr member);
 	Common::Archive *loadInstallerArchive(const Common::Path &file, const Common::String &ext, const uint8 offset);
-	Common::Archive *loadStuffItArchive(const Common::Path &file, const Common::String &canonicalName);
-	Common::Archive *loadStuffItArchive(Common::SeekableReadStream *stream, const Common::String &canonicalName, const Common::String &debugName);
-	Common::Archive *loadKyra1MacInstaller();
 
 	bool loadProtectedFiles(const char *const * list);
 
@@ -274,7 +268,6 @@ enum KyraResources {
 	k3VqaSubtitlesIntro,
 	k3VqaSubtitlesBoat,
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 	kRpgCommonMoreStrings,
 	kRpgCommonDscShapeIndex,
 	kRpgCommonDscX,
@@ -1236,16 +1229,10 @@ enum KyraResources {
 	kLoLCredits,
 
 	kLoLHistory,
-#endif // ENABLE_EOB || ENABLE_LOL
 
 	kMaxResIDs
 };
 
-struct Shape;
-struct Room;
-struct AmigaSfxTable;
-struct HoFSeqData;
-struct HoFSeqItemAnimData;
 
 class StaticResource {
 public:
@@ -1261,28 +1248,13 @@ public:
 
 	const char *const *loadStrings(int id, int &strings);
 	const uint8 *loadRawData(int id, int &size);
-	const Shape *loadShapeTable(int id, int &entries);
-	const AmigaSfxTable *loadAmigaSfxTable(int id, int &entries);
-	const Room *loadRoomTable(int id, int &entries);
-	const HoFSeqData *loadHoFSequenceData(int id, int &entries);
-	const HoFSeqItemAnimData *loadHoFSeqItemAnimData(int id, int &entries);
-	const ItemAnimDefinition *loadItemAnimDefinition(int id, int &entries);
 	const uint16 *loadRawDataBe16(int id, int &entries);
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 	const uint32 *loadRawDataBe32(int id, int &entries);
-#endif // (ENABLE_EOB || ENABLE_LOL)
-#ifdef ENABLE_LOL
 	const LoLCharacter *loadCharData(int id, int &entries);
 	const SpellProperty *loadSpellData(int id, int &entries);
 	const CompassDef *loadCompassData(int id, int &entries);
 	const FlyingObjectShape *loadFlyingObjectData(int id, int &entries);
 	const LoLButtonDef *loadButtonDefs(int id, int &entries);
-#endif // ENABLE_LOL
-#ifdef ENABLE_EOB
-	const DarkMoonAnimCommand *loadEoB2SeqData(int id, int &entries);
-	const DarkMoonShapeDef *loadEoB2ShapeData(int id, int &entries);
-	const EoBCharacter *loadEoBNpcData(int id, int &entries);
-#endif // ENABLE_EOB
 
 	// This sets up the internal resource mapping for the selected language. It should
 	// usually called with id '-1' so as to map all resources for the game, because the
@@ -1309,54 +1281,24 @@ private:
 	bool loadDummy(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadStringTable(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadRawData(Common::SeekableReadStream &stream, void *&ptr, int &size);
-	bool loadShapeTable(Common::SeekableReadStream &stream, void *&ptr, int &size);
-	bool loadAmigaSfxTable(Common::SeekableReadStream &stream, void *&ptr, int &size);
-	bool loadRoomTable(Common::SeekableReadStream &stream, void *&ptr, int &size);
-	bool loadHoFSequenceData(Common::SeekableReadStream &stream, void *&ptr, int &size);
-	bool loadHoFSeqItemAnimData(Common::SeekableReadStream &stream, void *&ptr, int &size);
-	bool loadItemAnimDefinition(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadRawDataBe16(Common::SeekableReadStream &stream, void *&ptr, int &size);
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 	bool loadRawDataBe32(Common::SeekableReadStream &stream, void *&ptr, int &size);
-#endif // (ENABLE_LOL || ENABLE_EOB)
-#ifdef ENABLE_LOL
 	bool loadCharData(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadSpellData(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadCompassData(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadFlyingObjectData(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadButtonDefs(Common::SeekableReadStream &stream, void *&ptr, int &size);
-#endif // ENABLE_LOL
-#ifdef ENABLE_EOB
-	bool loadEoB2SeqData(Common::SeekableReadStream &stream, void *&ptr, int &size);
-	bool loadEoB2ShapeData(Common::SeekableReadStream &stream, void *&ptr, int &size);
-	bool loadEoBNpcData(Common::SeekableReadStream &stream, void *&ptr, int &size);
-#endif // ENABLE_EOB
 
 	void freeDummy(void *&ptr, int &size);
 	void freeRawData(void *&ptr, int &size);
 	void freeStringTable(void *&ptr, int &size);
-	void freeShapeTable(void *&ptr, int &size);
-	void freeAmigaSfxTable(void *&ptr, int &size);
-	void freeRoomTable(void *&ptr, int &size);
-	void freeHoFSequenceData(void *&ptr, int &size);
-	void freeHoFSeqItemAnimData(void *&ptr, int &size);
-	void freeItemAnimDefinition(void *&ptr, int &size);
 	void freeRawDataBe16(void *&ptr, int &size);
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 	void freeRawDataBe32(void *&ptr, int &size);
-#endif // (ENABLE_EOB || ENABLE_LOL)
-#ifdef ENABLE_LOL
 	void freeCharData(void *&ptr, int &size);
 	void freeSpellData(void *&ptr, int &size);
 	void freeCompassData(void *&ptr, int &size);
 	void freeFlyingObjectData(void *&ptr, int &size);
 	void freeButtonDefs(void *&ptr, int &size);
-#endif // ENABLE_LOL
-#ifdef ENABLE_EOB
-	void freeEoB2SeqData(void *&ptr, int &size);
-	void freeEoB2ShapeData(void *&ptr, int &size);
-	void freeEoBNpcData(void *&ptr, int &size);
-#endif // ENABLE_EOB
 
 	enum ResTypes {
 		kStringList = 0,

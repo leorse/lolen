@@ -42,13 +42,7 @@ WARN_UNUSED_RESULT KyraEngine_v1::ReadSaveHeaderError KyraEngine_v1::readSaveHea
 	header.oldHeader = false;
 	header.flags = 0;
 
-	if (type == MKTAG('K', 'Y', 'R', 'A') || type == MKTAG('A', 'R', 'Y', 'K')) { // old Kyra1 header ID
-		header.gameID = GI_KYRA1;
-		header.oldHeader = true;
-	} else if (type == MKTAG('H', 'O', 'F', 'S')) { // old Kyra2 header ID
-		header.gameID = GI_KYRA2;
-		header.oldHeader = true;
-	} else if (type == MKTAG('W', 'W', 'S', 'V')) {
+	if (type == MKTAG('W', 'W', 'S', 'V')) {
 		header.gameID = in->readByte();
 	} else {
 		// try checking for original save header
@@ -69,17 +63,7 @@ WARN_UNUSED_RESULT KyraEngine_v1::ReadSaveHeaderError KyraEngine_v1::readSaveHea
 
 			type = in->readUint32BE();
 			header.version = in->readUint16LE();
-			if (type == MKTAG('M', 'B', 'L', '3') && header.version == 100) {
-				saveOk = true;
-				header.description = descriptionBuffer;
-				header.gameID = GI_KYRA2;
-				break;
-			} else if (type == MKTAG('M', 'B', 'L', '4') && header.version == 102) {
-				saveOk = true;
-				header.description = descriptionBuffer;
-				header.gameID = GI_KYRA3;
-				break;
-			} else if (type == MKTAG('C','D','0','4')) {
+			if (type == MKTAG('C','D','0','4')) {
 				header.version = in->readUint32BE();
 				// We don't check the minor version, since the original doesn't do that either and it isn't required.
 				if (header.version != MKTAG(' ','C','D','1'))
@@ -102,7 +86,7 @@ WARN_UNUSED_RESULT KyraEngine_v1::ReadSaveHeaderError KyraEngine_v1::readSaveHea
 	}
 
 	header.version = in->readUint32BE();
-	if (header.version > CURRENT_SAVE_VERSION || (header.oldHeader && header.version > 8) || (type == MKTAG('A', 'R', 'Y', 'K') && header.version > 3))
+	if (header.version > CURRENT_SAVE_VERSION)
 		return kRSHEInvalidVersion;
 
 	// Versions prior to 9 are using a fixed length description field

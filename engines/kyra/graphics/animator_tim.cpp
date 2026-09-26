@@ -23,21 +23,13 @@
 #include "kyra/graphics/wsamovie.h"
 #include "kyra/graphics/screen_lol.h"
 
-#ifdef ENABLE_LOL
 #include "kyra/engine/lol.h"
-#else
-#include "kyra/graphics/screen_v2.h"
-#endif
 
 #include "common/system.h"
 
 namespace Kyra {
 
-#ifdef ENABLE_LOL
 TimAnimator::TimAnimator(LoLEngine *engine, Screen_v2 *screen_v2, OSystem *system, bool useParts) : _vm(engine), _screen(screen_v2), _system(system), _useParts(useParts) {
-#else
-TimAnimator::TimAnimator(KyraEngine_v1 *engine, Screen_v2 *screen_v2, OSystem *system, bool useParts) : _vm(engine), _screen(screen_v2), _system(system), _useParts(useParts) {
-#endif
 	_animations = new Animation[TIM::kWSASlots]();
 	assert(_animations);
 
@@ -102,7 +94,6 @@ void TimAnimator::displayFrame(int animIndex, int page, int frame, int flags) {
 		_screen->updateScreen();
 }
 
-#ifdef ENABLE_LOL
 void TimAnimator::setupPart(int animIndex, int part, int firstFrame, int lastFrame, int cycles, int nextPart, int partDelay, int f, int sfxIndex, int sfxFrame) {
 	AnimPart *a = &_animations[animIndex].parts[part];
 	a->firstFrame = firstFrame;
@@ -228,6 +219,5 @@ int TimAnimator::resetLastPart(int animIndex) {
 	SWAP(res, anim->lastPart);
 	return res;
 }
-#endif
 
 } // End of namespace Kyra

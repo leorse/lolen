@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #ifndef KYRA_GUI_LOL_H
 #define KYRA_GUI_LOL_H
@@ -27,6 +26,9 @@
 #include "kyra/gui/gui_v1.h"
 
 namespace Kyra {
+
+#define GUI_LOL_BUTTON(button, a, b, c, d, e, f, h, i, j, k, l, m, n, o, p, q, r, s, t) 	do { 		button.nextButton = 0; 		button.index = a; 		button.keyCode = b; 		button.keyCode2 = c; 		button.data0Val1 = d; 		button.data1Val1 = e; 		button.data2Val1 = f; 		button.flags = h; 		button.data0ShapePtr = button.data1ShapePtr = button.data2ShapePtr = 0; 		button.dimTableIndex = i; 		button.x = j; 		button.y = k; 		button.width = l; 		button.height = m; 		button.data0Val2 = n; 		button.data0Val3 = o; 		button.data1Val2 = p; 		button.data1Val3 = q; 		button.data2Val2 = r; 		button.data2Val3 = s; 		button.flags2 = t; 		button.mouseWheel = 0; 		button.arg = 0; 	} while (0)
+
 #define GUI_LOL_MENU(menu, a, b, c, d, e, f, g, i) \
 	do { \
 		const ScreenDim *dim = _screen->getScreenDim(a); \
@@ -177,4 +179,3 @@ private:
 
 #endif
 
-#endif // ENABLE_LOL

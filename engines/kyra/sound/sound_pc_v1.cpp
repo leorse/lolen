@@ -28,60 +28,19 @@
 
 namespace Kyra {
 
-// Kyra 1 sound triggers. Most noticeably, these are used towards the end of
-// the game, in the castle, to cycle between different songs. The same music is
-// used in other places throughout the game, but the player is less likely to
-// spend enough time there to notice.
-
-const int SoundPC_v1::_kyra1SoundTriggers[] = {
-	0, 4, 5, 3
-};
-
-const int SoundPC_v1::_kyra1NumSoundTriggers = ARRAYSIZE(SoundPC_v1::_kyra1SoundTriggers);
-
 SoundPC_v1::SoundPC_v1(KyraEngine_v1 *vm, Audio::Mixer *mixer, kType type)
 	: Sound(vm, mixer), _driver(nullptr), _trackEntries(), _soundDataPtr(nullptr), _type(type), _version(-1) {
 	memset(_trackEntries, 0, sizeof(_trackEntries));
 
-	_soundTriggers = nullptr;
-	_numSoundTriggers = 0;
 	_sfxPlayingSound = -1;
 	_soundFileLoaded.clear();
 	_currentResourceSet = 0;
 	memset(&_resInfo, 0, sizeof(_resInfo));
 
-	switch (vm->game()) {
-	case GI_LOL:
-		_version = (_vm->gameFlags().isDemo && !_vm->gameFlags().isTalkie) ? 3 : 4;
-		break;
-	case GI_KYRA2:
-		_version = 4;
-		break;
-	case GI_KYRA1:
-		_version = 3;
-		_soundTriggers = _kyra1SoundTriggers;
-		_numSoundTriggers = _kyra1NumSoundTriggers;
-		break;
-	case GI_EOB2:
-		_version = 2;
-		break;
-	case GI_EOB1:
-		_version = 1;
-		break;
-	default:
-		break;
-	}
+	_version = (_vm->gameFlags().isDemo && !_vm->gameFlags().isTalkie) ? 3 : 4;
 
-#ifdef ENABLE_EOB
-	// Correct the type to someting we support. NullSound is treated as a silent AdLib driver.
-	if (_type != kAdLib && _type != kPCSpkr && _type != kPCjr)
-		_type = kAdLib;
-	_driver = (type == kAdLib) ? (_version > 0 ? PCSoundDriver::createAdLib(mixer, _version) : nullptr) : PCSoundDriver::createPCSpk(mixer, _type == kPCjr);
-#else
 	_type = kAdLib;
-	if (_version > 0)
-		_driver = PCSoundDriver::createAdLib(mixer, _version);
-#endif
+	_driver = PCSoundDriver::createAdLib(mixer, _version);
 	assert(_driver);
 }
 
@@ -95,20 +54,6 @@ SoundPC_v1::~SoundPC_v1() {
 bool SoundPC_v1::init() {
 	_driver->initDriver();
 	return true;
-}
-
-void SoundPC_v1::process() {
-	int trigger = _driver->getSoundTrigger();
-
-	if (trigger < _numSoundTriggers) {
-		int soundId = _soundTriggers[trigger];
-
-		if (soundId)
-			playTrack(soundId);
-	} else {
-		warning("Unknown sound trigger %d", trigger);
-		// TODO: At this point, we really want to clear the trigger...
-	}
 }
 
 void SoundPC_v1::updateVolumeSettings() {

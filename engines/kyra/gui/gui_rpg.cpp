@@ -19,7 +19,6 @@
  *
  */
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 
 #include "kyra/engine/kyra_rpg.h"
 
@@ -102,25 +101,18 @@ bool KyraRpgEngine::clickedShape(int shapeIndex) {
 		return true;
 
 	for (; shapeIndex; shapeIndex = _levelDecorationProperties[shapeIndex].next) {
-		if (_flags.gameID != GI_LOL)
-			shapeIndex--;
-
 		uint16 s = _levelDecorationProperties[shapeIndex].shapeIndex[1];
 
 		if (s == 0xFFFF)
 			continue;
 
-		int w = _flags.gameID == GI_LOL ? _levelDecorationShapes[s][3] : (_levelDecorationShapes[s][2] << 3);
-		int h = _levelDecorationShapes[s][_flags.gameID == GI_LOL ? 2 : 1];
+		int w = _levelDecorationShapes[s][3];
+		int h = _levelDecorationShapes[s][2];
 		int x = _levelDecorationProperties[shapeIndex].shapeX[1] + _clickedShapeXOffs;
 		int y = _levelDecorationProperties[shapeIndex].shapeY[1] + _clickedShapeYOffs;
 
-		if (_levelDecorationProperties[shapeIndex].flags & 1) {
-			if (_flags.gameID == GI_LOL)
-				w <<= 1;
-			else
-				x = 176 - x - w;
-		}
+		if (_levelDecorationProperties[shapeIndex].flags & 1)
+			w <<= 1;
 
 		if (posWithinRect(_mouseX, _mouseY, x - 4, y - 4, x + w + 8, y + h + 8))
 			return true;
@@ -131,4 +123,3 @@ bool KyraRpgEngine::clickedShape(int shapeIndex) {
 
 } // End of namespace Kyra
 
-#endif // defined(ENABLE_EOB) || defined(ENABLE_LOL)

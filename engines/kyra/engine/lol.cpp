@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
@@ -522,11 +521,6 @@ Common::KeymapArray LoLEngine::initKeymaps() {
 	res.push_back(keyMap2);
 
 	return res;
-}
-
-void LoLEngine::pauseEngineIntern(bool pause) {
-	KyraEngine_v1::pauseEngineIntern(pause);
-	pauseDemoPlayer(pause);
 }
 
 Common::Error LoLEngine::go() {
@@ -4617,4 +4611,3 @@ void LoLEngine::printMapExitButtonText() {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL

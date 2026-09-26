@@ -19,7 +19,6 @@
  *
  */
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 
 #include "kyra/engine/kyra_rpg.h"
 #include "kyra/resource/resource.h"
@@ -101,14 +100,10 @@ void KyraRpgEngine::setLevelShapesDim(int index, int16 &x1, int16 &x2, int dim) 
 void KyraRpgEngine::setDoorShapeDim(int index, int16 &y1, int16 &y2, int dim) {
 	uint8 a = _dscDimMap[index];
 
-	if (_flags.gameID != GI_EOB1 && dim == -1 && a != 3)
+	if (dim == -1 && a != 3)
 		a++;
 
 	uint8 b = a;
-	if (_flags.gameID == GI_EOB1) {
-		a += _dscDoorFrameIndex1[_currentLevel - 1];
-		b += _dscDoorFrameIndex2[_currentLevel - 1];
-	}
 
 	y1 = _dscDoorFrameY1[a];
 	y2 = _dscDoorFrameY2[b];
@@ -358,7 +353,7 @@ void KyraRpgEngine::setVcnFormat(int outputBPP, Common::RenderMode renderMode) {
 	else if (_vcnBpp == 2)
 		_vcnDrawLine = new VcnLineDrawingMethods(new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_hiCol<uint16>), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_hiCol<uint16>),
 			new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_trans_hiCol<uint16>), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_trans_hiCol<uint16>));
-	else if (_flags.platform == Common::kPlatformAmiga || (_flags.gameID == GI_EOB1 && _flags.use16ColorMode))
+	else if (_flags.platform == Common::kPlatformAmiga)
 		_vcnDrawLine = new VcnLineDrawingMethods(new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_planar), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_planar),
 			new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_trans_planar), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_trans_planar));
 	else if (renderMode == Common::kRenderCGA)
@@ -640,8 +635,7 @@ int KyraRpgEngine::clickedLeverOn(uint16 block, uint16 direction) {
 	_levelBlockProperties[block].walls[direction]++;
 	_sceneUpdateRequired = true;
 
-	if (_flags.gameID == GI_LOL)
-		snd_playSoundEffect(30, -1);
+	snd_playSoundEffect(30, -1);
 
 	runLevelScript(block, _clickedSpecialFlag);
 
@@ -656,8 +650,7 @@ int KyraRpgEngine::clickedLeverOff(uint16 block, uint16 direction) {
 	_levelBlockProperties[block].walls[direction]--;
 	_sceneUpdateRequired = true;
 
-	if (_flags.gameID == GI_LOL)
-		snd_playSoundEffect(29, -1);
+	snd_playSoundEffect(29, -1);
 
 	runLevelScript(block, _clickedSpecialFlag);
 	return 1;
@@ -672,7 +665,7 @@ void KyraRpgEngine::processDoorSwitch(uint16 block, int openClose) {
 	if (block == _currentBlock)
 		return;
 
-	if ((_flags.gameID == GI_LOL && (_levelBlockProperties[block].assignedObjects & 0x8000)) || (_flags.gameID != GI_LOL  && (_levelBlockProperties[block].flags & 7)))
+	if (_levelBlockProperties[block].assignedObjects & 0x8000)
 		return;
 
 	if (openClose == 0) {
@@ -686,8 +679,6 @@ void KyraRpgEngine::processDoorSwitch(uint16 block, int openClose) {
 
 	if (openClose == 0) {
 		openClose = (_wllWallFlags[_levelBlockProperties[block].walls[_wllWallFlags[_levelBlockProperties[block].walls[0]] & 8 ? 0 : 1]] & 1) ? 1 : -1;
-		if (_flags.gameID != GI_LOL)
-			openClose *= -1;
 	}
 
 	openCloseDoor(block, openClose);
@@ -699,9 +690,9 @@ void KyraRpgEngine::openCloseDoor(int block, int openClose) {
 
 	int c = (_wllWallFlags[_levelBlockProperties[block].walls[0]] & 8) ? 0 : 1;
 	int v = _levelBlockProperties[block].walls[c];
-	int flg = (_flags.gameID == GI_EOB1) ? 1 : ((openClose == 1) ? 0x10 : (openClose == -1 ? 0x20 : 0));
+	int flg = (openClose == 1) ? 0x10 : (openClose == -1 ? 0x20 : 0);
 
-	if ((_flags.gameID == GI_EOB1 && openClose == -1 && !(_wllWallFlags[v] & flg)) || (!(_flags.gameID == GI_EOB1 && openClose == -1) && (_wllWallFlags[v] & flg)))
+	if (_wllWallFlags[v] & flg)
 		return;
 
 	for (int i = 0; i < 3; i++) {
@@ -728,16 +719,12 @@ void KyraRpgEngine::openCloseDoor(int block, int openClose) {
 			_levelBlockProperties[block].walls[c ^ 2] += openClose;
 
 			int snd = (openClose == -1) ? 4 : (isSpecialDoor(block) ? 126 : 3);
-			if (_flags.gameID == GI_LOL) {
-				snd_processEnvironmentalSoundEffect(snd + 28, _currentBlock);
-				if (!checkSceneUpdateNeed(block))
-					snd_updateEnvironmentalSfx(0);
-			} else {
-				snd_updateEnvironmentalSfx(snd);
-			}
+			snd_processEnvironmentalSoundEffect(snd + 28, _currentBlock);
+			if (!checkSceneUpdateNeed(block))
+				snd_updateEnvironmentalSfx(0);
 		}
 
-		enableTimer(_flags.gameID == GI_LOL ? 0 : 4);
+		enableTimer(0);
 
 	} else {
 		while (!(flg & _wllWallFlags[v]))
@@ -780,4 +767,3 @@ bool KyraRpgEngine::isSpecialDoor(int block) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_EOB || ENABLE_LOL

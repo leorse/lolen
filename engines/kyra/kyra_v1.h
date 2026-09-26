@@ -128,11 +128,7 @@ friend class Debugger;
 friend class ::KyraMetaEngine;
 friend class GUI;
 friend class GUI_v1;
-friend class GUI_EoB;
-friend class GUI_EoB_SegaCD;
 friend class SoundMidiPC;		// For _eventMan
-friend class SeqPlayer_HOF;		// For skipFlag()
-friend class TransferPartyWiz;	// For save state API
 public:
 	KyraEngine_v1(OSystem *system, const GameFlags &flags);
 	~KyraEngine_v1() override;
@@ -333,23 +329,6 @@ protected:
 
 	virtual int convertVolumeToMixer(int value);
 	virtual int convertVolumeFromMixer(int value);
-
-	// pathfinder
-	virtual int findWay(int x, int y, int toX, int toY, int *moveTable, int moveTableSize);
-	int findSubPath(int x, int y, int toX, int toY, int *moveTable, int start, int end);
-	int getFacingFromPointToPoint(int x, int y, int toX, int toY);
-	int getOppositeFacingDirection(int dir);
-	void changePosTowardsFacing(int &x, int &y, int facing);
-	int getMoveTableSize(int *moveTable);
-	virtual bool lineIsPassable(int x, int y) = 0;
-
-	static const int8 _addXPosTable[];
-	static const int8 _addYPosTable[];
-
-	// Character
-
-	static const int8 _charAddXPosTable[];
-	static const int8 _charAddYPosTable[];
 
 	// save/load
 	int _gameToLoad;

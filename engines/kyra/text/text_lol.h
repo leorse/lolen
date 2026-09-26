@@ -22,12 +22,9 @@
 #ifndef KYRA_TEXT_LOL_H
 #define KYRA_TEXT_LOL_H
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 #include "kyra/text/text_rpg.h"
-#endif
 #include "common/scummsys.h"
 
-#ifdef ENABLE_LOL
 
 namespace Kyra {
 
@@ -64,6 +61,5 @@ private:
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL
 
 #endif

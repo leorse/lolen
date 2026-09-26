@@ -49,16 +49,8 @@ uint8 *Screen_v2::generateOverlay(const Palette &pal, uint8 *buffer, int opColor
 	*dst++ = 0;
 
 	int maxIndex = maxColor;
-	if (maxIndex == -1) {
-		if (_vm->game() == GI_LOL) {
-			if (_use16ColorMode)
-				maxIndex = 255;
-			else
-				maxIndex = 127;
-		} else {
-			maxIndex = 255;
-		}
-	}
+	if (maxIndex == -1)
+		maxIndex = _use16ColorMode ? 255 : 127;
 
 	for (int i = 1; i != 256; ++i) {
 		const byte curR = pal[i * 3 + 0] - (((pal[i * 3 + 0] - opR) * weight) >> 7);

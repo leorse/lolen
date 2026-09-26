@@ -79,9 +79,6 @@ protected:
 
 public:
 	static PCSoundDriver *createAdLib(Audio::Mixer *mixer, int version);
-#ifdef ENABLE_EOB
-	static PCSoundDriver *createPCSpk(Audio::Mixer *mixer, bool pcJRMode);
-#endif
 };
 
 } // End of namespace Kyra

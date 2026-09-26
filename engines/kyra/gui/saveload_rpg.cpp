@@ -19,10 +19,8 @@
  *
  */
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 
 #include "kyra/resource/resource.h"
-#include "kyra/script/script_eob.h"
 
 #include "common/system.h"
 #include "common/savefile.h"
@@ -123,4 +121,3 @@ void KyraRpgEngine::releaseFlyingObjectTempData(LevelTempData *tmp) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_EOB || ENABLE_LOL

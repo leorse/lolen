@@ -49,8 +49,6 @@ public:
 	// e. g. when typing a one-byte character, like a digit).
 	static void mergeUpdateJohabChars(uint16 &destJohabChar0, uint16 &destJohabChar1, char asciiInput, bool reset);
 
-	static Common::Path findMacResourceFile(const char *baseName, const char *suffix = "");
-
 private:
 	struct DOS2JOHABEntry {
 		char key;

@@ -19,7 +19,6 @@
  *
  */
 
-#if defined(ENABLE_EOB) || defined(ENABLE_LOL)
 
 #ifndef KYRA_TEXT_EOB_H
 #define KYRA_TEXT_EOB_H
@@ -76,7 +75,6 @@ protected:
 	virtual void textPageBreak();
 	void displayWaitButton();
 
-	void convertString(char *str);
 
 	char *_dialogueBuffer;
 
@@ -139,8 +137,6 @@ private:
 	};
 
 	Screen *_screen;
-	char *_table1;
-	char *_table2;
 
 	Screen::FontId _waitButtonFont;
 
@@ -153,4 +149,3 @@ private:
 
 #endif
 
-#endif // ENABLE_EOB || ENABLE_LOL

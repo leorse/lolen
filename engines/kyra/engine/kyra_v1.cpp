@@ -24,6 +24,7 @@
 #include "kyra/resource/resource.h"
 #include "kyra/engine/timer.h"
 #include "kyra/gui/debugger.h"
+#include "kyra/text/text.h"
 
 #include "common/error.h"
 #include "common/config-manager.h"
@@ -88,29 +89,14 @@ Common::Error KyraEngine_v1::init() {
 	syncSoundSettings();
 
 	if (!_flags.useDigSound) {
-		if (_flags.platform == Common::kPlatformFMTowns) {
-			if (_flags.gameID == GI_KYRA1)
-				_sound = new SoundTowns_LoK(this, _mixer);
-			else
-				_sound = new SoundTownsPC98_v2(this, _mixer);
-		} else if (_flags.platform == Common::kPlatformPC98) {
-			if (_flags.gameID == GI_KYRA1)
-				_sound = new SoundPC98_LoK(this, _mixer);
-			else
-				_sound = new SoundTownsPC98_v2(this, _mixer);
-		} else if (_flags.platform == Common::kPlatformAmiga) {
-			_sound = new SoundAmiga_LoK(this, _mixer);
-		} else if (_flags.platform == Common::kPlatformMacintosh && _flags.gameID == GI_KYRA1) {
-			_sound = new SoundMac(this, _mixer);
+		if (_flags.platform == Common::kPlatformFMTowns || _flags.platform == Common::kPlatformPC98) {
+			_sound = new SoundTownsPC98_v2(this, _mixer);
 		} else {
-			// In Kyra 1 users who have specified a default MT-32 device in the launcher settings
-			// will get MT-32 music, otherwise AdLib. In Kyra 2 and LoL users who have specified a
-			// default GM device in the launcher will get GM music, otherwise AdLib. Users who want
-			// MT-32 music in Kyra2 or LoL have to select this individually (since we assume that
-			// most users rather have a GM device than a MT-32 device).
-			// Users who want PC speaker sound always have to select this individually for all
-			// Kyra games.
-			MidiDriver::DeviceHandle dev = MidiDriver::detectDevice(MDT_PCSPK | MDT_MIDI | MDT_ADLIB | ((_flags.gameID == GI_KYRA2 || _flags.gameID == GI_LOL) ? MDT_PREFER_GM : MDT_PREFER_MT32));
+			// Users who have specified a default GM device in the launcher will get GM music,
+			// otherwise AdLib. Users who want MT-32 music have to select this individually
+			// (since we assume that most users rather have a GM device than a MT-32 device).
+			// Users who want PC speaker sound always have to select this individually.
+			MidiDriver::DeviceHandle dev = MidiDriver::detectDevice(MDT_PCSPK | MDT_MIDI | MDT_ADLIB | MDT_PREFER_GM);
 			const MusicType musicType = MidiDriver::getMusicType(dev);
 			if (musicType == MT_ADLIB) {
 				_sound = new SoundPC_v1(this, _mixer, Sound::kAdLib);
@@ -437,7 +423,7 @@ void KyraEngine_v1::setupKeyMap() {
 		return;
 
 	for (int i = 0; i < ARRAYSIZE(keys); i++)
-		_keyMap[keys[i].kcScummVM] = (_flags.gameID != GI_EOB1 && _flags.gameID != GI_EOB2 && _flags.platform == Common::kPlatformPC98) ? keys[i].kcPC98 : ((_flags.platform == Common::kPlatformFMTowns) ? keys[i].kcFMTowns : keys[i].kcDOS);
+		_keyMap[keys[i].kcScummVM] = (_flags.platform == Common::kPlatformPC98) ? keys[i].kcPC98 : ((_flags.platform == Common::kPlatformFMTowns) ? keys[i].kcFMTowns : keys[i].kcDOS);
 }
 
 void KyraEngine_v1::updateInput() {

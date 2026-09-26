@@ -27,7 +27,6 @@
 #include "common/hashmap.h"
 #include "common/str.h"
 #include "common/list.h"
-#include "common/macresman.h"
 #include "common/stream.h"
 
 namespace Kyra {
@@ -140,12 +139,6 @@ public:
 class InstallerLoader {
 public:
 	static Common::Archive *load(Resource *owner, const Common::Path &filename, const Common::String &extension, const uint8 offset);
-};
-
-class StuffItLoader {
-public:
-	static Common::Archive *load(Resource *owner, const Common::Path &filename);
-	static Common::Archive *load(Resource *owner, Common::SeekableReadStream *stream, const Common::String &debugName);
 };
 
 } // End of namespace Kyra

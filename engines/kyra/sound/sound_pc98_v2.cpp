@@ -172,8 +172,6 @@ void SoundTownsPC98_v2::beginFadeOut() {
 
 int32 SoundTownsPC98_v2::voicePlay(const char *file, Audio::SoundHandle *handle, uint8 volume, uint8 priority, bool) {
 	static const uint16 rates[] = { 0x10E1, 0x0CA9, 0x0870, 0x0654, 0x0438, 0x032A, 0x021C, 0x0194 };
-	static const char patternHOF[] = "%s.PCM";
-	static const char patternLOL[] = "%s.VOC";
 
 	int h = 0;
 	if (_currentSFX) {
@@ -192,7 +190,7 @@ int32 SoundTownsPC98_v2::voicePlay(const char *file, Audio::SoundHandle *handle,
 			return 0;
 	}
 
-	Common::String fileName = Common::String::format( _vm->game() == GI_LOL ? patternLOL : patternHOF, file);
+	Common::String fileName = Common::String::format("%s.VOC", file);
 
 	uint8 *data = _vm->resource()->fileData(fileName.c_str(), nullptr);
 	uint8 *src = data;

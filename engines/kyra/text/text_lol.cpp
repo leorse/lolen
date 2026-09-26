@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/text/text_lol.h"
 #include "kyra/engine/lol.h"
@@ -360,4 +359,3 @@ void TextDisplayer_LoL::textPageBreak() {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL

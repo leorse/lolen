@@ -42,7 +42,7 @@ namespace Kyra {
 
 Screen::Screen(KyraEngine_v1 *vm, OSystem *system, const ScreenDim *dimTable, const int dimTableSize)
 	: _system(system), _vm(vm), _sjisInvisibleColor(0), _dimTable(dimTable), _dimTableCount(dimTableSize),
-	_cursorColorKey((vm->game() == GI_KYRA1 || vm->game() == GI_EOB1 || vm->game() == GI_EOB2) ? 0xFF : 0),
+	_cursorColorKey(0),
 	_screenHeight(vm->gameFlags().platform == Common::kPlatformSegaCD ? SCREEN_H_SEGA_NTSC : SCREEN_H) {
 	_debugEnabled = false;
 	_forceFullUpdate = false;
@@ -179,41 +179,14 @@ bool Screen::init() {
 	_useOverlays = false;
 	_useSJIS = false;
 	_use16ColorMode = _vm->gameFlags().use16ColorMode;
-	_4bitPixelPacking = (_use16ColorMode && _vm->game() == GI_LOL);
+	_4bitPixelPacking = _use16ColorMode;
 	_isAmiga = (_vm->gameFlags().platform == Common::kPlatformAmiga);
 	_isSegaCD = (_vm->gameFlags().platform == Common::kPlatformSegaCD);
-	// Amiga copper palette magic requires the use of more than 32 colors for some purposes.
-	_useAmigaExtraColors = (_isAmiga && _vm->game() == GI_EOB2);
-
-	// We only check the "render_mode" setting for both Eye of the Beholder
-	// games here, since all the other games do not support the render_mode
-	// setting or handle it differently, like Kyra 1 PC-98. This avoids
-	// graphics glitches and crashes in other games, when the user sets his
-	// global render_mode setting to EGA for example.
-	// TODO/FIXME: It would be nice not to hardcode this. But there is no
-	// trivial/non annoying way to do mode checks in an easy fashion right
-	// now.
-	// In a more general sense, we might want to think about a way to only
-	// pass valid config values, as in values which the engine can work with,
-	// to the engines. We already limit the selection via our GUIO flags in
-	// the game specific settings, but this is not enough due to global
-	// settings allowing everything.
-	if (_vm->gameFlags().platform == Common::kPlatformDOS && (_vm->game() == GI_EOB1 || _vm->game() == GI_EOB2)) {
-		if (ConfMan.hasKey("render_mode"))
-			_renderMode = Common::parseRenderMode(ConfMan.get("render_mode"));
-		if ((_vm->game() == GI_EOB1 && _renderMode != Common::kRenderVGA && _renderMode != Common::kRenderCGA && _renderMode != Common::kRenderEGA) ||
-			(_vm->game() == GI_EOB2 && _renderMode != Common::kRenderVGA && _renderMode != Common::kRenderEGA))
-				_renderMode = Common::kRenderDefault;
-	} 
+	_useAmigaExtraColors = false;
 
 	// In VGA mode the odd and even page pointers point to the same buffers.
 	for (int i = 0; i < SCREEN_PAGE_NUM; i++)
 		_pageMapping[i] = i & ~1;
-	// CGA and EGA modes use additional pages to do the CGA/EGA specific graphics conversions.
-	if (_vm->game() == GI_EOB1 && (_renderMode == Common::kRenderCGA || _renderMode == Common::kRenderEGA)) {
-		for (int i = 0; i < 8; i++)
-			_pageMapping[i] = i;
-	}
 
 	memset(_shapePages, 0, sizeof(_shapePages));
 	memset(_fonts, 0, sizeof(_fonts));
@@ -222,7 +195,7 @@ bool Screen::init() {
 
 	if (_useOverlays) {
 		_useSJIS = (_vm->gameFlags().lang == Common::JA_JPN);
-		_sjisInvisibleColor = (_vm->game() == GI_KYRA1) ? 0x80 : 0xF6;
+		_sjisInvisibleColor = 0xF6;
 		_sjisMixedFontMode = !_use16ColorMode;
 
 		if (!_sjisOverlayPtrs[0]) {
@@ -252,8 +225,8 @@ bool Screen::init() {
 
 			if (_use16ColorMode)
 				_fonts[FID_SJIS_TEXTMODE_FNT] = new SJISFont(_sjisFontShared, _sjisInvisibleColor, true, false, 0);
-			else if (_vm->gameFlags().platform != Common::kPlatformPC98 || _vm->game() != GI_EOB2)
-				_fonts[FID_SJIS_FNT] = new SJISFont(_sjisFontShared, _sjisInvisibleColor, false, _vm->game() != GI_LOL && _vm->game() != GI_EOB2, _vm->game() == GI_LOL ? 1 : 0);
+			else
+				_fonts[FID_SJIS_FNT] = new SJISFont(_sjisFontShared, _sjisInvisibleColor, false, false, 1);
 		}
 
 		assert((_outputPixelFormat.bytesPerPixel >> 1) < ARRAYSIZE(_mergeOverlayProcs));
@@ -318,7 +291,7 @@ bool Screen::init() {
 	_curDim = nullptr;
 	_charSpacing = 0;
 	_lineSpacing = 0;
-	_overdrawMargin = (_vm->game() == GI_EOB2 && _vm->gameFlags().lang == Common::ZH_TWN);
+	_overdrawMargin = false;
 	for (int i = 0; i < ARRAYSIZE(_textColorsMap); ++i)
 		_textColorsMap[i] = i;
 	_textColorsMapHiCol[0] = _textColorsMapHiCol[1] = 0;
@@ -591,8 +564,7 @@ void Screen::modifyScreenDim(int dim, int x, int y, int w, int h) {
 	_customDimTable[dim]->sy = y;
 	_customDimTable[dim]->w = w;
 	_customDimTable[dim]->h = h;
-	if (dim == _curDimIndex || _vm->game() == GI_LOL)
-		setScreenDim(dim);
+	setScreenDim(dim);
 }
 
 void Screen::setScreenDim(int dim) {
@@ -1447,58 +1419,15 @@ bool Screen::loadFont(FontId fontId, const char *filename) {
 	int temp = 0;
 
 	if (!fnt) {
-		if (_vm->game() == GI_KYRA1 && _isAmiga) {
-			fnt = new AMIGAFont();
-		} else if (fontId == FID_CHINESE_FNT) {
+		if (fontId == FID_CHINESE_FNT) {
 			Common::Array<Font*> *fa = new Common::Array<Font*>;
-			if (_vm->game() == GI_KYRA1) {
-				const uint16 *lookupTable = _vm->staticres()->loadRawDataBe16(k1TwoByteFontLookupTable, temp);
-				fa->push_back(new ChineseOneByteFontLoK(SCREEN_W));
-				fa->push_back(new ChineseTwoByteFontLoK(SCREEN_W, lookupTable, temp));
-				fnt = new MultiSubsetFont(fa);
-			} else {
-				Font *fn1 = 0;
-				Font *fn2 = 0;
-				if (_vm->game() == GI_KYRA2) {
-					fn1 = new ChineseOneByteFontHOF(SCREEN_W);
-					fn2 = new ChineseTwoByteFontHOF(SCREEN_W);
-				}
-#ifdef ENABLE_LOL
-				else if (_vm->game() == GI_LOL) {
-					// Same as next one but with different spacing
-					fn1 = new ChineseOneByteFontLoL(SCREEN_W);
-					fn2 = new ChineseTwoByteFontLoL(SCREEN_W);
-				}
-#endif
-				else {
-					fn1 = new ChineseOneByteFontMR(SCREEN_W);
-					fn2 = new ChineseTwoByteFontMR(SCREEN_W);
-				}
-				fa->push_back(fn1);
-				fa->push_back(fn2);
-				fnt = new MultiSubsetFont(fa);
-				_vm->staticres()->setLanguage(_vm->gameFlags().extraLang, k2FontData);
-				const uint8 *oneByteData = _vm->staticres()->loadRawData(k2FontData, temp);
-				Common::MemoryReadStream str(oneByteData, temp);
-				fnt->load(str);
-			}
-		} else if (fontId == FID_KOREAN_FNT) {
-			if (_vm->game() == GI_KYRA2) {
-				Common::Array<Font*> *fa = new Common::Array<Font*>;
-				fa->push_back(new KoreanOneByteFontHOF(SCREEN_W));
-				fa->push_back(new KoreanTwoByteFontHOF(SCREEN_W));
-				fnt = new MultiSubsetFont(fa);
-				// Load 1-byte (ASCII) font from ENGLISH.FNT first, then
-				// the main KOREAN.FNT call below will load the 2-byte glyphs.
-				Common::SeekableReadStream *engFile = _vm->resource()->createReadStream("ENGLISH.FNT");
-				if (engFile) {
-					fnt->load(*engFile);
-					delete engFile;
-				}
-			} else {
-				const uint16 *lookupTable = _vm->staticres()->loadRawDataBe16(k1TwoByteFontLookupTable, temp);
-				fnt = new JohabFontLoK(_fonts[FID_8_FNT], lookupTable, temp);
-			}
+			fa->push_back(new ChineseOneByteFontLoL(SCREEN_W));
+			fa->push_back(new ChineseTwoByteFontLoL(SCREEN_W));
+			fnt = new MultiSubsetFont(fa);
+			_vm->staticres()->setLanguage(_vm->gameFlags().extraLang, k2FontData);
+			const uint8 *oneByteData = _vm->staticres()->loadRawData(k2FontData, temp);
+			Common::MemoryReadStream str(oneByteData, temp);
+			fnt->load(str);
 		} else {
 			fnt = new DOSFont();
 		}
@@ -1552,7 +1481,7 @@ int Screen::getTextWidth(const char *str, bool nextWordOnly) {
 
 	while (1) {
 		if (_sjisMixedFontMode && curType == Font::kASCII)
-			setFont((*str & 0x80) ? ((_vm->game() == GI_EOB2 && curFont == FID_6_FNT) ? FID_SJIS_SMALL_FNT : FID_SJIS_FNT) : curFont);
+			setFont((*str & 0x80) ? FID_SJIS_FNT : curFont);
 
 		uint16 c = fetchChar(str);
 
@@ -1615,7 +1544,7 @@ void Screen::printText(const char *str, int x, int y, uint8 color1, uint8 color2
 
 	while (1) {
 		if (_sjisMixedFontMode && curType == Font::kASCII)
-			setFont((*str & 0x80) ? ((_vm->game() == GI_EOB2 && curFont == FID_6_FNT) ? FID_SJIS_SMALL_FNT : FID_SJIS_FNT) : curFont);
+			setFont((*str & 0x80) ? FID_SJIS_FNT : curFont);
 
 		uint16 c = fetchChar(str);
 		charHeight = MAX<int>(charHeight, getCharHeight(c));
@@ -1768,7 +1697,7 @@ void Screen::drawShape(uint8 pageNum, const uint8 *shapeData, int x, int y, int 
 		_dsScaleH = 0x100;
 	}
 
-	if ((flags & kDRAWSHP_BCKGRNDFADE) && _vm->game() != GI_KYRA1)
+	if (flags & kDRAWSHP_BCKGRNDFADE)
 		_dsBackgroundFadingTable = va_arg(args, uint8 *);
 
 	va_end(args);
@@ -1850,8 +1779,6 @@ void Screen::drawShape(uint8 pageNum, const uint8 *shapeData, int x, int y, int 
 	const int ppc = (flags >> 8) & 0x3F;
 	DsPlotFunc dsPlot = dsPlotFunc[ppc];
 	DsPlotFunc dsPlot2 = dsPlotFunc[ppc], dsPlot3 = dsPlotFunc[ppc];
-	if (_vm->gameFlags().gameID == GI_KYRA3 && (flags & kDRAWSHP_PRIORITY))
-		dsPlot3 = dsPlotFunc[ppc & ~8];
 
 	if (!dsPlot || !dsPlot2 || !dsPlot3) {
 		if (!dsPlot2)
@@ -1903,7 +1830,7 @@ void Screen::drawShape(uint8 pageNum, const uint8 *shapeData, int x, int y, int 
 
 	uint16 frameSize = READ_LE_UINT16(src); src += 2;
 
-	int colorTableColors = ((_vm->game() != GI_KYRA1) && (shapeFlags & 4)) ? *src++ : 16;
+	int colorTableColors = (shapeFlags & 4) ? *src++ : 16;
 
 	if (!(flags & kDRAWSHP_COLOR) && (shapeFlags & 1))
 		_dsColorTable = src;
@@ -3439,9 +3366,8 @@ void Screen::loadBitmap(const char *filename, int tempPage, int dstPage, Palette
 	if (skip)
 		srcData += 4;
 
-	const char *ext = filename + strlen(filename) - 3;
 	uint8 compType = srcData[2];
-	uint32 imgSize = (_vm->game() == GI_KYRA2 && !scumm_stricmp(ext, "CMP")) ? READ_LE_UINT16(srcData) : READ_LE_UINT32(srcData + 4);
+	uint32 imgSize = READ_LE_UINT32(srcData + 4);
 	uint16 palSize = READ_LE_UINT16(srcData + 8);
 
 	if (pal && palSize)
@@ -3616,17 +3542,12 @@ byte *Screen::getOverlayPtr(int page) {
 	else if (page == 2)
 		return _sjisOverlayPtrs[2];
 
-	if (_vm->game() == GI_KYRA2) {
-		if (page == 12)
-			return _sjisOverlayPtrs[3];
-	} else if (_vm->game() == GI_LOL) {
-		if (page == 4)
-			return _sjisOverlayPtrs[3];
-		if (page == 6)
-			return _sjisOverlayPtrs[4];
-		if (page == 12)
-			return _sjisOverlayPtrs[5];
-	}
+	if (page == 4)
+		return _sjisOverlayPtrs[3];
+	if (page == 6)
+		return _sjisOverlayPtrs[4];
+	if (page == 12)
+		return _sjisOverlayPtrs[5];
 
 	return nullptr;
 }

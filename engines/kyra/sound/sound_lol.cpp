@@ -19,7 +19,6 @@
  *
  */
 
-#ifdef ENABLE_LOL
 
 #include "kyra/engine/lol.h"
 #include "kyra/sound/sound.h"
@@ -299,4 +298,3 @@ int LoLEngine::convertVolumeFromMixer(int value) {
 
 } // End of namespace Kyra
 
-#endif // ENABLE_LOL
