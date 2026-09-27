@@ -351,14 +351,14 @@ void splashScreen() {
 
 	g_system->updateScreen();
 
-	// Delay 0.6 secs
+	// Delay 2 secs
 	uint time0 = g_system->getMillis();
 	Common::Event event;
 
 	// We must poll an event in order to have the window shown at least on Mac
 	g_system->getEventManager()->pollEvent(event);
 
-	while (time0 + 600 > g_system->getMillis()) {
+	while (time0 + 2000 > g_system->getMillis()) {
 		g_system->delayMillis(10);
 	}
 	g_system->hideOverlay();

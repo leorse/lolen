@@ -1,22 +1,6 @@
 MODULE := video
 
-MODULE_OBJS := \
-	3do_decoder.o \
-	4xm_decoder.o \
-	4xm_utils.o \
-	avi_decoder.o \
-	coktel_decoder.o \
-	dxa_decoder.o \
-	flic_decoder.o \
-	mpegps_decoder.o \
-	mve_decoder.o \
-	paco_decoder.o \
-	psx_decoder.o \
-	qt_decoder.o \
-	qtvr_decoder.o \
-	smk_decoder.o \
-	subtitles.o \
-	video_decoder.o
+MODULE_OBJS :=
 
 ifdef USE_BINK
 MODULE_OBJS += \

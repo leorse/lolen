@@ -87,5 +87,11 @@ void initGraphics3d(int width, int height);
  * Return value is index in modes of resulting mode.
  */
 int initGraphicsAny(const Graphics::ModeWithFormatList &modes, int start = 0);
+
+/**
+ * Shows the ScummVM splash screen, once. initGraphics() shows it automatically
+ * if it was not shown before.
+ */
+void splashScreen();
 /** @} */
 #endif

@@ -56,7 +56,7 @@ chaque étape** (compiler, lancer le jeu, commiter).
     --disable-jpeg --disable-gif --disable-theoradec --disable-vpx --disable-faad \
     --disable-bink --disable-tinygl --disable-lua \
     --disable-fluidsynth --disable-fluidlite --disable-sonivox \
-    --disable-hq-scalers --disable-edge-scalers
+    --disable-hq-scalers --disable-edge-scalers --disable-translation
   make -j12
   ```
 
@@ -70,7 +70,7 @@ chaque étape** (compiler, lancer le jeu, commiter).
 - [x] Compiler un ScummVM qui ne contient que Kyra et LoL
 - [x] `git init`, `.gitignore`, commit initial
 - [x] Garder une copie de l'exécutable de référence (`saveScumm/`)
-- [ ] Isoler la config du build de travail de celle de ScummVM officiel
+- [x] Isoler la config du build de travail de celle de ScummVM officiel (fait en 3a)
       (`scummvm.ini` à côté de l'exe pour le mode portable, ou `--config=…`).
       Aujourd'hui les deux partagent `%APPDATA%\ScummVM`.
 - [x] Vérifier le lancement direct sans launcher :
@@ -187,22 +187,72 @@ l'étape 3, quand le `main()` et le backend LolEN remplaceront `base/`, `gui/`
 et `backends/`.
 
 ## Étape 3 : remplacer l'intégration ScummVM
-- [ ] Écrire un `main()` LolEN qui crée directement `LoLEngine`, à la place de
-      `base/` et du launcher `gui/`
+
+### 3a. Exe qui lance directement le jeu, sans launcher (fait)
+Le backend SDL de ScummVM est conservé ; seuls le démarrage et le launcher sont
+remplacés. Le nouveau code est dans `lolen/` (namespace `LolEN`).
+- [x] `lolen/main.cpp` : point d'entrée Windows (remplace
+      `backends/platform/sdl/win32/win32-main.cpp`)
+- [x] `LolEN::Application` (`lolen/application.cpp`) : remplace `base/main.cpp`
+      et `base/commandLine.cpp` (supprimés). Il gère la ligne de commande, les
+      valeurs par défaut, la config, la détection de la version, le lancement du
+      moteur et les messages d'erreur (boîte de message Windows).
+- [x] Configuration dans `lolen.ini` et sauvegardes dans `saves\`, à côté de l'exe
+      (plus de dépendance à `%APPDATA%\ScummVM` pour la config et les sauvegardes)
+- [x] Chemin du jeu : argument de la ligne de commande, sinon `path` dans la
+      section `[lol]` de `lolen.ini`, sinon le dossier de l'exe
+- [x] Langue : `language` dans `lolen.ini`, sinon celle du système si la version
+      la propose, sinon la première trouvée ; la langue retenue est enregistrée
+- [x] Launcher supprimé (`gui/launcher.*`, options globales, thèmes du launcher,
+      dialogues associés), puis tous les objets compilés mais non liés à l'exe
+      (analyse de la carte de l'éditeur de liens)
+- [x] `dists/scummvm.rc` nettoyé et aux couleurs de LolEN (thèmes, soundfont,
+      shaders d'autres moteurs et fichier « Game Explorer » retirés)
+- [x] Traductions de la GUI ScummVM désactivées (`--disable-translation`)
+- [x] Plus de bouton « Return to Launcher » dans le menu Ctrl+F5
+
+Ligne de commande : `LandsOfLore.exe [OPTIONS] [DOSSIER_DU_JEU]`, avec `--path=`,
+`--language=`, `-f/--fullscreen`, `-w/--windowed`, `--debugflags=`,
+`-d/--debuglevel=`, `-h/--help`.
+
+Limites connues (réglées en 3b) :
+- le menu ScummVM en jeu (Ctrl+F5) est toujours là, en anglais, avec le thème
+  intégré de ScummVM ; c'est aussi le seul écran qui permet de choisir le pilote
+  musical (sinon `music_driver` dans `lolen.ini`) ;
+- la section générale de `lolen.ini` s'appelle encore `[scummvm]` (nom codé en
+  dur dans `ConfigManager`) ;
+- le backend Windows de ScummVM crée encore `%APPDATA%\ScummVM` (journaux) ;
+
+### 3b. Backend et infrastructure LolEN
 - [ ] Remplacer la détection MD5 (`AdvancedDetector`) par une détection
       simplifiée ou des `GameFlags` fixes
-- [ ] Écrire un backend LolEN minimal (classes `LolEN…`) sur SDL2 ou SDL3 : affichage, palette,
-      événements, timer (`getMillis`, `delayMillis`), mixer audio, sauvegardes
-- [ ] Remplacer `ConfMan` par une configuration LolEN simple (INI à côté de l'exe)
+- [ ] Écrire un backend LolEN minimal (classes `LolEN…`) sur SDL2 ou SDL3 :
+      affichage, palette, événements, timer (`getMillis`, `delayMillis`), mixer
+      audio, sauvegardes
+- [ ] Remplacer `ConfMan` par une configuration LolEN simple (`lolen.ini`)
 - [ ] Remplacer le keymapper par une gestion directe du clavier
-- [ ] Remplacer `GUI::Debugger` et la macro de traduction `_()` par des stubs
-- [ ] Définir les chemins propres à l'exe (`lolen.ini`, `saves\` à côté de
-      l'exe) pour ne plus dépendre de `%APPDATA%\ScummVM`
+- [ ] Remplacer ou retirer la GUI ScummVM restante : menu Ctrl+F5, `GUI::Debugger`
+      (console de debug), macro de traduction `_()`
+- [ ] Prévoir un écran d'options LolEN (pilote musical, plein écran…), puisque
+      le menu Ctrl+F5 de ScummVM disparaîtra
+- [ ] Élaguer ensuite `common/`, `graphics/`, `image/`, `video/`, `gui/`
 
 ## Étape 4 : système de build et identité
 - [ ] Passer à CMake (retirer `/CMakeLists.txt` du `.gitignore`)
-- [ ] Nommer le projet et l'exécutable LolEN (`lolen.exe`), sans utiliser
-      « ScummVM » ; le moteur Kyra n'est pas renommé
+- [x] Nommer l'exécutable `LandsOfLore.exe` (`EXECUTABLE` dans le `Makefile`) ;
+      le projet s'appelle LolEN, le moteur Kyra n'est pas renommé
+- [x] Icône LolEN (`icons/lolen.ico`, 16 à 256 px, générée depuis
+      `saveScumm/icone.ico`), utilisée pour l'exe et la fenêtre ; icônes
+      ScummVM `.ico`/`.icns`/`.svg` supprimées (`scummvm.xpm` reste, pour les
+      autres systèmes)
+- [x] Splash : celui de ScummVM d'abord (conservé, par respect pour le projet
+      d'origine), puis celui de LolEN (`lolen/data/splash.bmp`, intégré comme
+      ressource `lolen_splash.bmp` dans `dists/scummvm.rc`, affiché par
+      `LolEN::showSplashScreen()` pendant 2 s, passable par une touche ou un clic ;
+      le splash ScummVM passe de 0,6 s à 1 s, dans `engines/engine.cpp`)
+- [x] Informations de version de l'exe (produit LolEN, copyright ScummVM, GPL)
+- [x] Traductions de la GUI ScummVM désactivées par défaut dans `configure`
+      (plus besoin de `--disable-translation`)
 - [ ] Intégrer `kyra.dat` dans l'exe ou le livrer à côté
 - [ ] Rédiger le README (licence GPLv3, crédits ScummVM, données de jeu requises)
 

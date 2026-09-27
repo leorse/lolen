@@ -90,7 +90,7 @@ endif
 # Misc stuff - you should never have to edit this                     #
 #######################################################################
 
-EXECUTABLE  := $(EXEPRE)scummvm$(EXEEXT)
+EXECUTABLE  := $(EXEPRE)LandsOfLore$(EXEEXT)
 
 include $(srcdir)/Makefile.common
 

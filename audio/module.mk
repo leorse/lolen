@@ -2,24 +2,15 @@ MODULE := audio
 
 MODULE_OBJS := \
 	adlib.o \
-	adlib_ctmidi.o \
-	adlib_hmisos.o \
-	adlib_ms.o \
 	audiostream.o \
-	casio.o \
 	chip.o \
 	cms.o \
 	fmopl.o \
 	mac_plugin.o \
 	mididrv.o \
 	mididrv_ms.o \
-	midiparser_hmp.o \
-	midiparser_qt.o \
-	midiparser_smf.o \
 	midiparser_xmidi.o \
 	midiparser.o \
-	midiplayer.o \
-	miles_adlib.o \
 	miles_midi.o \
 	mixer.o \
 	mpu401.o \
@@ -27,52 +18,22 @@ MODULE_OBJS := \
 	musicplugin.o \
 	null.o \
 	rate.o \
-	sid.o \
 	ym2149.o \
 	timestamp.o \
-	decoders/3do.o \
-	decoders/aac.o \
 	decoders/adpcm.o \
-	decoders/aiff.o \
-	decoders/apc.o \
-	decoders/asf.o \
-	decoders/flac.o \
 	decoders/g711.o \
-	decoders/iff_sound.o \
-	decoders/mac_snd.o \
-	decoders/mac_snd_mace.o \
-	decoders/mp3.o \
-	decoders/qdm2.o \
 	decoders/quicktime.o \
 	decoders/raw.o \
 	decoders/voc.o \
 	decoders/vorbis.o \
 	decoders/wave.o \
-	decoders/wma.o \
-	decoders/xa.o \
-	decoders/xan_dpcm.o \
-	mac/halestorm.o \
-	mods/universaltracker.o \
-	mods/infogrames.o \
-	mods/maxtrax.o \
-	mods/mod_xm_s3m.o \
-	mods/module.o \
-	mods/module_mod_xm_s3m.o \
-	mods/protracker.o \
 	mods/paula.o \
-	mods/rjp1.o \
-	mods/soundfx.o \
-	mods/tfmx.o \
-	mods/desktoptracker.o \
 	softsynth/cms.o \
 	softsynth/opl/dbopl.o \
 	softsynth/opl/dosbox.o \
 	softsynth/opl/mame.o \
 	softsynth/appleiigs.o \
-	softsynth/fluidsynth.o \
-	softsynth/eas.o \
-	softsynth/pcspk.o \
-	softsynth/ay8912.o
+	softsynth/pcspk.o
 
 ifdef USE_HMI_AUDIO
 MODULE_OBJS += \

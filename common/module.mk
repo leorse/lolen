@@ -2,14 +2,8 @@ MODULE := common
 
 MODULE_OBJS := \
 	archive.o \
-	base64.o \
-	btea.o \
-	concatstream.o \
 	config-manager.o \
-	coroutines.o \
-	dbcs-str.o \
 	debug.o \
-	engine_data.o \
 	error.o \
 	events.o \
 	file.o \
@@ -17,7 +11,6 @@ MODULE_OBJS := \
 	gui_options.o \
 	hashmap.o \
 	language.o \
-	localization.o \
 	macresman.o \
 	memory.o \
 	memorypool.o \
@@ -42,13 +35,10 @@ MODULE_OBJS := \
 	textconsole.o \
 	text-to-speech.o \
 	tokenizer.o \
-	translation.o \
 	unicode-bidi.o \
 	ustr.o \
 	util.o \
-	xpfloat.o \
-	zip-set.o \
-	std/std.o
+	zip-set.o
 
 ifdef ENABLE_EVENTRECORDER
 MODULE_OBJS += \

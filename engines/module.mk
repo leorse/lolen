@@ -7,7 +7,6 @@ MODULE_OBJS := \
 	engine.o \
 	game.o \
 	metaengine.o \
-	obsolete.o \
 	savestate.o
 
 # Include common rules

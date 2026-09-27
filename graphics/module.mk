@@ -1,40 +1,26 @@
 MODULE := graphics
 
 MODULE_OBJS := \
-	big5.o \
 	blit/blit.o \
 	blit/blit-alpha.o \
 	blit/blit-fast.o \
 	blit/blit-generic.o \
 	blit/blit-scale.o \
-	color_quantizer.o \
 	cursorman.o \
-	dirtyrects.o \
 	font.o \
 	fontman.o \
 	fonts/amigafont.o \
 	fonts/bdf.o \
-	fonts/bgifont.o \
 	fonts/consolefont.o \
-	fonts/dosfont.o \
-	fonts/freetype.o \
 	fonts/macfont.o \
 	fonts/newfont_big.o \
 	fonts/newfont.o \
-	fonts/ttf.o \
 	fonts/winfont.o \
-	framelimiter.o \
 	hotspot_renderer.o \
 	image-archive.o \
-	korfont.o \
-	larryScale.o \
-	maccursor.o \
 	macgui/datafiles.o \
-	macgui/macbutton.o \
-	macgui/macdialog.o \
 	macgui/macfontmanager.o \
 	macgui/macmenu.o \
-	macgui/macpopupmenu.o \
 	macgui/mactext.o \
 	macgui/mactext-canvas.o \
 	macgui/mactext-md.o \
@@ -53,22 +39,16 @@ MODULE_OBJS := \
 	pixelformat.o \
 	pm5544.o \
 	primitives.o \
-	riscoscursor.o \
 	renderer.o \
 	scalerplugin.o \
-	scaler/downscaler.o \
 	scaler/thumbnail_intern.o \
-	screen.o \
 	scaler/normal.o \
-	sjis.o \
 	surface.o \
 	svg.o \
-	transform_struct.o \
 	transform_tools.o \
 	thumbnail.o \
 	VectorRenderer.o \
 	VectorRendererSpec.o \
-	wincursor.o \
 	yuv_to_rgb.o
 
 ifdef USE_ARM_SCALER_ASM
