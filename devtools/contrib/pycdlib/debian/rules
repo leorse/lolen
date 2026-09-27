@@ -1,6 +1,0 @@
-#!/usr/bin/make -f
-
-export PYBUILD_NAME = pycdlib
-
-%:
-	dh $@ --buildsystem=pybuild --with=python2,python3
