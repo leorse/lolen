@@ -42,18 +42,13 @@ int LoLEngine::processPrologue() {
 		showIntro();
 
 	preInit();
-
-	Common::String versionString = "ScummVM " + _versionString;
-
 	int processSelection = -1;
 	while (!shouldQuit() && processSelection == -1) {
 		_screen->loadBitmap(gameFlags().lang == Common::Language::ZH_TWN ? "TITLECHI.CPS" : "TITLE.CPS", 2, 2, &_screen->getPalette(0));
 		_screen->copyRegion(0, 0, 0, 0, 320, 200, 2, 0, Screen::CR_NO_P_CHECK);
 
-		_screen->setFont(Screen::FID_6_FNT);
-		// Original version: (260|193) "V CD1.02 D"
-		const int width = _screen->getTextWidth(versionString.c_str());
-		_screen->fprintString("%s", 320 - width, 193, 0x67, 0x00, 0x04, versionString.c_str());
+		// LoLEN: no version string on the title screen (ScummVM draws "ScummVM <version>" here,
+		// the original game drew "V CD1.02 D" at (260|193)).
 		_screen->setFont(_flags.lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT : Screen::FID_9_FNT);
 
 		_screen->fadePalette(_screen->getPalette(0), 0x1E);

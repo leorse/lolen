@@ -22,7 +22,9 @@
 #ifndef LOLEN_APPLICATION_H
 #define LOLEN_APPLICATION_H
 
+#include "common/array.h"
 #include "common/error.h"
+#include "common/language.h"
 #include "common/path.h"
 #include "common/ptr.h"
 #include "common/str.h"
@@ -74,6 +76,7 @@ private:
 	void setupKeymapper();
 
 	Common::Error identifyGame(const Plugin *&detectionPlugin, DetectedGame &game, const void *&descriptor);
+	Common::Array<Common::Language> findLanguages(const Plugin *detectionPlugin, const DetectedGame &game);
 	Common::Error runGame(const Plugin *enginePlugin, const DetectedGame &game, const void *descriptor);
 
 	void showError(const Common::String &message);

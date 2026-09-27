@@ -25,6 +25,7 @@
 #include "lolen/application.h"
 #include "lolen/config.h"
 
+#include "lolen/menu.h"
 #include "lolen/splash.h"
 
 #include "engines/engine.h"
@@ -33,6 +34,7 @@
 #include "base/plugins.h"
 #include "base/version.h"
 
+#include "common/algorithm.h"
 #include "common/archive.h"
 #include "common/config-manager.h"
 #include "common/debug.h"
@@ -182,7 +184,7 @@ void Application::registerDefaults() {
 	ConfMan.registerDefault("disable_sdl_parachute", false);
 	ConfMan.registerDefault("disable_sdl_audio", false);
 
-	// The in-game menu of ScummVM (Ctrl+F5) still uses the ScummVM GUI
+	// The LoLEN menu (Ctrl+F5, F10) is built with the ScummVM GUI
 	ConfMan.registerDefault("gui_saveload_chooser", "grid");
 	ConfMan.registerDefault("gui_saveload_last_pos", "0");
 	ConfMan.registerDefault("gui_browser_show_hidden", false);
@@ -207,6 +209,23 @@ void Application::loadConfig() {
 		ConfMan.setPath("savepath", saveDir.getPath(), kTarget);
 	}
 
+	// Keyboard and gamepad mappings of the game used to be stored in the game domain by ScummVM.
+	// LoLEN keeps all the mappings in the keymapper domain ([controls] in lolen.ini).
+	Common::ConfigManager::Domain *gameDomain = ConfMan.getDomain(kTarget);
+	Common::ConfigManager::Domain *keymapperDomain = ConfMan.getDomain(Common::ConfigManager::kKeymapperDomain);
+	if (gameDomain && keymapperDomain) {
+		Common::StringArray keymapKeys;
+		for (const auto &entry : *gameDomain) {
+			if (entry._key.hasPrefix("keymap_"))
+				keymapKeys.push_back(entry._key);
+		}
+		for (const Common::String &key : keymapKeys) {
+			if (!keymapperDomain->contains(key))
+				keymapperDomain->setVal(key, gameDomain->getVal(key));
+			gameDomain->erase(key);
+		}
+	}
+
 	if (_debugLevel == -1 && ConfMan.hasKey("debuglevel"))
 		_debugLevel = ConfMan.getInt("debuglevel");
 	if (_debugLevel != -1)
@@ -215,7 +234,7 @@ void Application::loadConfig() {
 	if (_debugFlags.empty() && ConfMan.hasKey("debugflags"))
 		_debugFlags = ConfMan.get("debugflags");
 
-	// The in-game menu of ScummVM (Ctrl+F5) uses the built-in GUI theme, the launcher themes are
+	// The LoLEN menu (Ctrl+F5, F10) uses the built-in GUI theme, the launcher themes are
 	// not shipped. The built-in theme only has bitmap fonts, which the ScummVM GUI only accepts
 	// for English, so this menu is shown in English. The game itself keeps its own language.
 	ConfMan.set("gui_theme", "builtin", Common::ConfigManager::kSessionDomain);
@@ -321,6 +340,27 @@ Common::Error Application::identifyGame(const Plugin *&detectionPlugin, Detected
 	return result;
 }
 
+Common::Array<Common::Language> Application::findLanguages(const Plugin *detectionPlugin, const DetectedGame &game) {
+	Common::Array<Common::Language> languages;
+	if (game.language != Common::UNK_LANG)
+		languages.push_back(game.language);
+
+	// Multi-language versions are detected once per language
+	Common::FSList files;
+	if (!Common::FSNode(ConfMan.getPath("path", kTarget)).getChildren(files, Common::FSNode::kListAll))
+		return languages;
+
+	DetectedGames games = detectionPlugin->get<MetaEngineDetection>().detectGames(files);
+	for (const DetectedGame &detected : games) {
+		if (detected.gameId != kGameId || detected.platform != game.platform || detected.language == Common::UNK_LANG)
+			continue;
+		if (Common::find(languages.begin(), languages.end(), detected.language) == languages.end())
+			languages.push_back(detected.language);
+	}
+
+	return languages;
+}
+
 Common::Error Application::runGame(const Plugin *enginePlugin, const DetectedGame &game, const void *descriptor) {
 	Common::FSNode dir(ConfMan.getPath("path"));
 	Engine *engine = nullptr;
@@ -348,8 +388,11 @@ Common::Error Application::runGame(const Plugin *enginePlugin, const DetectedGam
 	// Game specific keymaps
 	Common::Keymapper *keymapper = _system.getEventManager()->getKeymapper();
 	Common::KeymapArray gameKeymaps = metaEngine.initKeymaps(kTarget);
-	for (auto &gameKeymap : gameKeymaps)
+	for (auto &gameKeymap : gameKeymaps) {
 		keymapper->addGameKeymap(gameKeymap);
+		// The mappings are stored with the global ones, see loadConfig()
+		keymapper->initKeymap(gameKeymap, ConfMan.getDomain(Common::ConfigManager::kKeymapperDomain));
+	}
 
 	_system.applyBackendSettings();
 	_system.engineInit();
@@ -433,6 +476,9 @@ int Application::run(int argc, const char *const argv[]) {
 			result = Common::kEnginePluginNotFound;
 			showError("The Lands of Lore engine is missing from this build.");
 		} else {
+			// The LoLEN menu (Ctrl+F5, F10, Start) replaces the ScummVM one
+			installMenu(findLanguages(detectionPlugin, game));
+
 			PluginManager::instance().unloadPluginsExcept(PLUGIN_TYPE_ENGINE, enginePlugin);
 
 			// The ScummVM splash screen first, then the LoLEN one. The engine does not show
@@ -440,9 +486,26 @@ int Application::run(int argc, const char *const argv[]) {
 			splashScreen();
 			showSplashScreen();
 
-			result = runGame(enginePlugin, game, descriptor);
-			if (result.getCode() != Common::kNoError && result.getCode() != Common::kUserCanceled)
-				showError("Error running Lands of Lore: " + result.getDesc());
+			for (;;) {
+				result = runGame(enginePlugin, game, descriptor);
+				if (result.getCode() != Common::kNoError && result.getCode() != Common::kUserCanceled) {
+					showError("Error running Lands of Lore: " + result.getDesc());
+					break;
+				}
+
+				// The menu restarts the game to apply a new language or music driver
+				if (!takeRestartRequest())
+					break;
+
+				_system.getEventManager()->resetQuit();
+				result = detectionPlugin->get<MetaEngineDetection>().identifyGame(game, &descriptor);
+				if (result.getCode() != Common::kNoError) {
+					showError("Lands of Lore could not be restarted: " + result.getDesc());
+					break;
+				}
+			}
+
+			uninstallMenu();
 		}
 
 		// Settings changed while playing (window size...)

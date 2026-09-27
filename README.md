@@ -1,80 +1,216 @@
-# [ScummVM README](https://www.scummvm.org/) · [![Translation status](https://translations.scummvm.org/widgets/scummvm/-/scummvm/svg-badge.svg)](https://translations.scummvm.org/engage/scummvm/?utm_source=widget) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md#pull-requests)
+# LoLEN — Lands of Lore ENgine
 
-## About ScummVM
+LoLEN runs **Lands of Lore: The Throne of Chaos** (Westwood Studios, 1993)
+natively on Windows, without DOSBox, installer or launcher. It is a single
+executable, `LandsOfLore.exe`, which starts the game directly.
 
-ScummVM allows you to play classic graphic point-and-click adventure games, text adventure games, and RPGs, as long as you already have the game data files. ScummVM replaces the executable files shipped with the games, which means you can now play your favorite games on all your favorite devices.
+LoLEN is a fork of [ScummVM](https://github.com/scummvm/scummvm), stripped
+down to the **Kyra** engine, which runs Lands of Lore. Everything else from
+ScummVM (launcher, other engines, other platforms) has been removed. The
+engine keeps its original name and code; the infrastructure which replaces
+ScummVM's is called LoLEN.
 
-So how did ScummVM get its name? Many of the famous LucasArts adventure games, such as Maniac Mansion and the Monkey Island series, were created using a utility called SCUMM (Script Creation Utility for Maniac Mansion). The ‘VM’ in ScummVM stands for Virtual Machine.
+The original game always stays playable as is. Music and sound are fully
+emulated (AdLib, optionally MT-32): no specific hardware is needed.
 
-While ScummVM was originally designed to run LucasArts’ SCUMM games, over time support has been added for many other games: see the full list [on our wiki](https://wiki.scummvm.org/index.php?title=Category:Supported_Games). Noteworthy titles include Broken Sword, Myst and Blade Runner, although there are countless other hidden gems to explore.
+> **The game files are not included.** You need an original copy of Lands of
+> Lore (GOG, CD or floppy version).
 
-For more information, compatibility lists, details on donating, the
-latest release, progress reports and more, please visit the ScummVM [home
-page](https://www.scummvm.org/).
+## Supported versions
 
-## Quickstart
+**DOS** versions only:
 
-For the impatient among you, here is how to get ScummVM running in five simple steps.
+| Version | Languages |
+|---|---|
+| CD (the GOG release is the CD version) | English, French, German (all on the same CD) |
+| Floppy | English, French, German, Spanish… depending on the release |
+| Fan translations (CD and floppy) | Russian, Italian, Chinese… |
 
-1. Download ScummVM from [our website](https://www.scummvm.org/downloads/) and install it.
+The PC-98, FM-Towns, Amiga and Mac versions and the demos are not supported.
 
-2. Create a directory on your hard drive and copy the game datafiles from the original media to this directory. Repeat this for every game you want to play.
+## Installing the game files
 
-3. Start ScummVM, choose 'Add game', select the directory containing the game datafiles (do not try to select the datafiles themselves!) and press Choose.
+Put the game files **in the same directory as `LandsOfLore.exe`**:
 
-4. The Game Options dialog opens to allow configuration of various settings for the game. These can be reconfigured at any time, but for now everything should be OK at the default settings.
+```
+LandsOfLore/
+├── LandsOfLore.exe
+├── (DLLs, see "Building")
+├── GENERAL.PAK, L01.PAK, ... ← game files
+├── lolen.ini                  ← created on first start
+└── saves/                     ← created on first start
+```
 
-5. Select the game you want to play in the list, and press Start. To play a game next time, skip to step 5, unless you want to add more games.
+To keep the game files in another directory, set that directory in
+`lolen.ini` (section `[game]`, key `path`) or pass it on the command line
+(see below).
 
->
-> Hint:
->
-> To add multiple games in one go, click the small arrow on the 'Add game' button and choose 'Mass Add'. You are again asked to select a directory, only this time ScummVM will search through all subdirectories for supported games.
+Depending on your version:
 
+- **CD**: copy **all** the content of the CD, including the `ENG`, `FRE` and
+  `GER` subdirectories (texts and voices of each language).
+- **GOG**: the GOG installation directory contains a `GAME.DAT` file, which is
+  an ISO image of the CD. Extract its content (for example with 7-Zip) and
+  copy it as for the CD version. `GAME.DAT` itself cannot be used directly.
+- **Floppy**: copy the content of all the disks (`WESTWOOD.1`, `WESTWOOD.2`…
+  files) into the same directory, or the files of a copy already installed
+  under DOS (`GENERAL.PAK`, `CHAPTER7.PAK`…).
 
+### MT-32 music (optional)
 
-## Reporting a bug
+The game uses AdLib emulation by default. For emulated Roland MT-32 music, put
+the MT-32 ROMs (`MT32_CONTROL.ROM` and `MT32_PCM.ROM`) next to the game files,
+then select the MT-32 in the **Sound** menu. The ROMs are not included.
 
-To report a bug, go to the ScummVM [Issue Tracker](https://bugs.scummvm.org/) and log in with your GitHub account.
+## Starting the game
 
-Please make sure the bug is reproducible, and still occurs in the latest git/[Daily build](https://buildbot.scummvm.org/#/dailybuilds) version. Also check the [compatibility list](https://www.scummvm.org/compatibility/) for that game, to ensure the issue is not already known. Please do not report bugs for games that are not listed as completable on the [Supported Games](https://wiki.scummvm.org/index.php?title=Category:Supported_Games) wiki page, or on the compatibility list. We already know those games have bugs!
+Double-click `LandsOfLore.exe`. The game starts directly.
 
-Please include the following information in the bug report:
+For versions with several languages (CD, GOG), the Windows language is used
+when it is available. It can be changed later in the LoLEN menu.
 
-- ScummVM version (test the latest git/[Daily build](https://buildbot.scummvm.org/#/dailybuilds))
-- Bug details, including instructions for how to reproduce the bug. If possible, include log files, screenshots, and any other relevant information.
-- Game language
-- Game version (for example, talkie or floppy)
-- Platform and Compiler (for example, Win32, Linux or FreeBSD)
-- An attached saved game, if possible.
-- If this bug only occurred recently, include the last version without the bug, and the first version with the bug. That way we can fix it quicker by looking at the changes made.
+If the game files are not found, a message says so: check the directory or
+the `path` key in `lolen.ini`.
 
-Finally, please report each issue separately; do not file multiple issues on the same ticket. It is difficult to track the status of each individual bug when they aren't on their own tickets.
+### Command line
 
-## Documentation
+```
+LandsOfLore.exe [OPTIONS] [GAME_PATH]
 
-### User documentation
+  GAME_PATH              Directory with the game data files
+  --path=DIR             Same as GAME_PATH
+  --language=CODE        Game language (en, fr, de, es, it, ru, zh...)
+  -f, --fullscreen       Start in fullscreen mode
+  -w, --windowed         Start in windowed mode
+  --debugflags=FLAGS     Enable the given debug channels (comma separated, or 'all')
+  -d, --debuglevel=NUM   Set the debug level
+  -h, --help             Show this text
+```
 
-For everything you need to know about how to use ScummVM, see our [user documentation](https://docs.scummvm.org/).
+### Configuration: `lolen.ini`
 
-### The ScummVM Wiki
+`lolen.ini` is created next to the executable on first start. Every setting
+is documented with a comment. A setting written as a comment (`;key=value`)
+keeps its default value: remove the `;` to change it.
 
-[The wiki](https://wiki.scummvm.org/) is the place to go for information about every game supported by ScummVM. If you're a developer, there's also some very handy information in the Developer section.
+| Section | Content |
+|---|---|
+| `[game]` | game directory, language, savegame directory, game options |
+| `[sound]` | music driver, volumes |
+| `[display]` | fullscreen, aspect ratio correction, filtering… |
+| `[controls]` | remapped keys and gamepad buttons (written by the program) |
+| `[debug]` | debugging |
+| `[internal]` | other settings written by the program |
 
-### Changelog
+Savegames are stored in the `saves` directory.
 
-Our extensive change log is available [here](NEWS.md).
+## Controls
 
-## SAST Tools
+The game is played with the mouse: left click to act, right click for
+secondary actions (use an item, cast a spell…).
 
-[PVS-Studio](https://pvs-studio.com/en/pvs-studio/?utm_source=github&utm_medium=organic&utm_campaign=open_source) - static analyzer for C, C++, C#, and Java code.
+### LoLEN menu
 
-## Credits
+| Keyboard | Gamepad | Action |
+|---|---|---|
+| F10 or Ctrl+F5 | Start | Open the LoLEN menu |
 
-A massive thank you to the entire team for making the ScummVM project possible. See the credits [here](AUTHORS)!
+The menu pauses the game and offers:
 
------
+- **Resume**: go back to the game;
+- **Language**: change the game language (the game restarts, the progress
+  since the last save is lost);
+- **Sound**: volumes, music driver (AdLib, MT-32…);
+- **Display**: fullscreen, aspect ratio correction, filtering, stretch mode;
+- **Controls**: remap the keyboard keys and the gamepad buttons;
+- **Credits**: the authors of LoLEN, of the Kyra engine and of ScummVM;
+- **Quit**: leave the game.
 
-> Good Luck and Happy Adventuring\!
-> The ScummVM team.
-> <https://www.scummvm.org/>
+### In the game
+
+| Keyboard | Gamepad | Action |
+|---|---|---|
+| Up / Down arrow | D-pad up / down | Move forward / backwards |
+| Left / Right arrow | Left / right trigger | Slide left / right |
+| Home / Page Up | D-pad left / right | Turn left / right |
+| F1, F2, F3 | X, Y, LB | Attack with the 1st, 2nd, 3rd character |
+| M | | Map |
+| R | | Rest |
+| O | | Game options (save, load, audio…) |
+| / | | Choose a spell |
+| | A / B | Left click / right click |
+
+### General shortcuts
+
+| Keyboard | Action |
+|---|---|
+| Alt+Enter | Toggle fullscreen |
+| Ctrl+U | Mute |
+| Ctrl+M | Capture the mouse in the window |
+| Alt+S | Screenshot |
+| Ctrl+Q or Alt+F4 | Quit |
+
+All these controls can be remapped in the **Controls** menu.
+
+## Building
+
+LoLEN is built on Windows with [MSYS2](https://www.msys2.org/), in the
+**UCRT64** environment.
+
+1. Install MSYS2, open the **MSYS2 UCRT64** shell and install the tools and
+   libraries:
+
+   ```sh
+   pacman -S make diffutils \
+     mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-pkgconf \
+     mingw-w64-ucrt-x86_64-SDL2 mingw-w64-ucrt-x86_64-libvorbis mingw-w64-ucrt-x86_64-zlib
+   ```
+
+2. Still in the UCRT64 shell, from the repository directory, configure and
+   build:
+
+   ```sh
+   ./configure --disable-all-engines --enable-engine=kyra,lol \
+     --disable-detection-full --enable-release --disable-debug \
+     --disable-cloud --disable-libcurl --disable-sdlnet --disable-enet \
+     --disable-discord --disable-tts --disable-taskbar --disable-sparkle \
+     --disable-freetype2 --disable-fribidi --disable-jpeg --disable-gif \
+     --disable-theoradec --disable-vpx --disable-faad --disable-bink \
+     --disable-tinygl --disable-lua --disable-fluidsynth --disable-fluidlite \
+     --disable-sonivox --disable-hq-scalers --disable-edge-scalers
+   make -j8
+   ```
+
+   This produces `LandsOfLore.exe` at the root of the repository. The engine
+   data (`kyra.dat`), the icon and the splash screen are embedded in the
+   executable.
+
+   Build from the MSYS2 UCRT64 shell: from Git Bash or another environment,
+   linking fails.
+
+3. The executable needs the MSYS2 DLLs. Either start it from the UCRT64
+   shell:
+
+   ```sh
+   ./LandsOfLore.exe /path/to/the/game
+   ```
+
+   or copy these DLLs from `C:\msys64\ucrt64\bin` next to `LandsOfLore.exe`:
+   `SDL2.dll`, `libvorbisfile-3.dll`, `libvorbis-0.dll`, `libogg-0.dll`,
+   `zlib1.dll`, `libwinpthread-1.dll`.
+
+The project roadmap is in [spec/roadmap-lol.md](spec/roadmap-lol.md).
+
+## License and credits
+
+LoLEN is distributed under the **GNU GPL version 3 or later**, like ScummVM
+(see [COPYING](COPYING)). The ScummVM license headers are kept in every
+source file.
+
+Many thanks to the whole ScummVM team, and especially to the authors of the
+Kyra engine, without whom this project would not exist. The full list of
+authors is in [AUTHORS](AUTHORS) and in the **Credits** screen of the menu.
+
+LoLEN is not an official ScummVM product. *Lands of Lore: The Throne of
+Chaos* is a trademark of its respective owners (Westwood Studios / Electronic
+Arts).

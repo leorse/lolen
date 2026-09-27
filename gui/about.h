@@ -57,6 +57,12 @@ protected:
 	void addLine(const Common::U32String &str);
 	void buildLines();
 
+	/** Lines shown before the ScummVM credits (LoLEN adds its own header). */
+	virtual void addHeaderLines() {}
+
+	/** Adds the section 'title' of the credits (e.g. an engine team), with its title line. */
+	void addCreditsSection(const char *title);
+
 	EEHandler	*_eeHandler;
 
 public:

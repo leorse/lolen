@@ -110,6 +110,7 @@ void AboutDialog::buildLines() {
 	for (i = 0; i < 1; i++)
 		_lines.push_back(Common::U32String());
 
+	addHeaderLines();
 	Common::String version("C0""ScummVM ");
 	version += gScummVMVersion;
 	addLine(version);
@@ -232,6 +233,18 @@ void AboutDialog::buildLines() {
 		_scrollbar->_entriesPerPage = _h - buttonHeight - 8 - 3 * _yOff;
 		_scrollbar->_singleStep = _lineHeight;
 		_scrollbar->recalc();
+	}
+}
+
+void AboutDialog::addCreditsSection(const char *title) {
+	const Common::String titleLine = Common::String("C1") + title;
+	for (int i = 0; i < ARRAYSIZE(credits); i++) {
+		if (titleLine != credits[i])
+			continue;
+		// The section ends with an empty line
+		for (; i < ARRAYSIZE(credits) && credits[i][0]; i++)
+			addLine(Common::U32String(credits[i], Common::kUtf8));
+		return;
 	}
 }
 

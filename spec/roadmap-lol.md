@@ -242,12 +242,23 @@ les garde et on construit les écrans LoLEN par-dessus, au lieu de tout réécri
 - [x] L'ancien format (`[scummvm]`, `[lol]`) est relu et converti
 
 #### 3b.2 Menu LoLEN (à la place du menu Ctrl+F5 de ScummVM)
-- [ ] Langue du jeu (le moteur est relancé dans la nouvelle langue)
-- [ ] Son : pilote musical (AdLib, MT-32 émulé, GM…), volumes
-- [ ] Affichage : plein écran, filtrage, correction d'aspect
-- [ ] Commandes : écran de réaffectation clavier et manette du keymapper
-- [ ] Crédits : défilement de `AUTHORS` (avec une section LoLEN/Kyra en tête)
-- [ ] Quitter
+Code dans `lolen/menu.cpp` (`LoLEN::installMenu`), branché par
+`Engine::setMainMenuFactory`. Ouverture : Ctrl+F5, F10, bouton Start de la
+manette. Testé en jeu (intro) le 2026-09-27 ; reste à vérifier que les
+réglages modifiés sont bien appliqués :
+- [x] Menu : Reprendre, Langue, Son, Affichage, Commandes, Crédits, Quitter
+      (le jeu est en pause pendant le menu)
+- [x] Langue du jeu : liste des langues détectées pour la version installée ;
+      le moteur est relancé dans la nouvelle langue (boucle de relance dans
+      `Application::run`)
+- [ ] Son (fenêtre OK, application à vérifier) : volumes, pilote musical (AdLib, MT-32 émulé…), MIDI, MT-32 ;
+      un changement de pilote propose de relancer le jeu
+- [ ] Affichage (fenêtre OK, application à vérifier) : plein écran, filtrage, correction d'aspect, mode d'étirement
+- [ ] Commandes (liste OK, réaffectation à vérifier) : réaffectation clavier et manette (actions globales et du
+      jeu, toutes dans `[controls]`), zone morte de la manette
+- [x] Crédits : en-tête LoLEN et équipe Kyra, puis les crédits ScummVM
+      (`AboutDialog` a reçu `addHeaderLines()` et `addCreditsSection()`)
+- [x] Quitter
 - [ ] Retirer le reste de la GUI ScummVM (options globales, navigateurs,
       sauvegarde/chargement façon ScummVM, aide…)
 - [ ] Langue du menu lui-même : polices bitmap limitées à l'anglais par

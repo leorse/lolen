@@ -814,9 +814,15 @@ void Engine::drawHotspots() {
 	overlayBuffer.free();
 }
 
+static Engine::MainMenuFactory s_mainMenuFactory = nullptr;
+
+void Engine::setMainMenuFactory(MainMenuFactory factory) {
+	s_mainMenuFactory = factory;
+}
+
 void Engine::openMainMenuDialog() {
 	if (!_mainMenuDialog)
-		_mainMenuDialog = new MainMenuDialog(this);
+		_mainMenuDialog = s_mainMenuFactory ? s_mainMenuFactory(this) : new MainMenuDialog(this);
 	Common::TextToSpeechManager *ttsMan = g_system->getTextToSpeechManager();
 	if (ttsMan != nullptr) {
 		ttsMan->pushState();

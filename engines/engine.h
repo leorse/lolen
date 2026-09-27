@@ -642,6 +642,15 @@ public:
 	 */
 	void openMainMenuDialog();
 
+	/** Creates the dialog shown by openMainMenuDialog(). */
+	typedef GUI::Dialog *(*MainMenuFactory)(Engine *engine);
+
+	/**
+	 * Replace the ScummVM main menu dialog (LoLEN shows its own menu).
+	 * Passing nullptr restores the ScummVM main menu.
+	 */
+	static void setMainMenuFactory(MainMenuFactory factory);
+
 	/**
 	 * Display a warning to the user that the game is not fully supported.
 	 *
