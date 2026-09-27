@@ -231,7 +231,7 @@ _gold=no
 _vkeybd=no
 _eventrec=no
 # GUI translation options
-# LolEN: the ScummVM GUI translations are not used (the remaining GUI is English only)
+# LoLEN: the ScummVM GUI translations are not used (the remaining GUI is English only)
 _translation=no
 # Default platform settings
 _backend=sdl
@@ -1055,7 +1055,7 @@ Optional Features:
                            as well)
   --disable-edge-scalers   exclude Edge2x and Edge3x scalers
   --disable-aspect         exclude aspect ratio correction
-  --enable-translation     build support for translated messages (disabled in LolEN)
+  --enable-translation     build support for translated messages (disabled in LoLEN)
   --disable-taskbar        don't build support for taskbar and launcher
                            integration
   --disable-cloud          don't build cloud support

@@ -9,14 +9,14 @@ chaque étape** (compiler, lancer le jeu, commiter).
 
 ## Règles impératives
 
-- **Nom du projet : LolEN** (Lands of Lore ENgine). C'est un fork de ScummVM
+- **Nom du projet : LoLEN** (Lands of Lore ENgine). C'est un fork de ScummVM
   avec sa propre identité.
   - **Le moteur Kyra garde ses noms d'origine** : dossier `engines/kyra`, noms
     de fichiers, namespace `Kyra`, classes `KyraEngine_v1`, `KyraRpgEngine`,
     `LoLEngine`, etc. On doit toujours pouvoir retrouver l'origine Kyra.
   - **Seules les classes qui remplacent l'infrastructure ScummVM** (point
     d'entrée, launcher, backend/`OSystem`, configuration, sauvegardes,
-    évènements…) portent le nom **LolEN**, au moment où elles sont écrites
+    évènements…) portent le nom **LoLEN**, au moment où elles sont écrites
     (étapes 3 et 4).
 - **Le jeu de base doit toujours pouvoir être lancé tel quel**, uniquement par
   émulation logicielle, sans matériel spécifique : graphismes VGA d'origine, son
@@ -183,17 +183,17 @@ environ 1 430 fichiers suivis.
 
 Note : l'essentiel de `common/`, `graphics/`, `image/`, `video/` et `gui/` reste
 utilisé par le launcher et l'infrastructure ScummVM. Leur réduction se fera à
-l'étape 3, quand le `main()` et le backend LolEN remplaceront `base/`, `gui/`
+l'étape 3, quand le `main()` et le backend LoLEN remplaceront `base/`, `gui/`
 et `backends/`.
 
 ## Étape 3 : remplacer l'intégration ScummVM
 
 ### 3a. Exe qui lance directement le jeu, sans launcher (fait)
 Le backend SDL de ScummVM est conservé ; seuls le démarrage et le launcher sont
-remplacés. Le nouveau code est dans `lolen/` (namespace `LolEN`).
+remplacés. Le nouveau code est dans `lolen/` (namespace `LoLEN`).
 - [x] `lolen/main.cpp` : point d'entrée Windows (remplace
       `backends/platform/sdl/win32/win32-main.cpp`)
-- [x] `LolEN::Application` (`lolen/application.cpp`) : remplace `base/main.cpp`
+- [x] `LoLEN::Application` (`lolen/application.cpp`) : remplace `base/main.cpp`
       et `base/commandLine.cpp` (supprimés). Il gère la ligne de commande, les
       valeurs par défaut, la config, la détection de la version, le lancement du
       moteur et les messages d'erreur (boîte de message Windows).
@@ -206,7 +206,7 @@ remplacés. Le nouveau code est dans `lolen/` (namespace `LolEN`).
 - [x] Launcher supprimé (`gui/launcher.*`, options globales, thèmes du launcher,
       dialogues associés), puis tous les objets compilés mais non liés à l'exe
       (analyse de la carte de l'éditeur de liens)
-- [x] `dists/scummvm.rc` nettoyé et aux couleurs de LolEN (thèmes, soundfont,
+- [x] `dists/scummvm.rc` nettoyé et aux couleurs de LoLEN (thèmes, soundfont,
       shaders d'autres moteurs et fichier « Game Explorer » retirés)
 - [x] Traductions de la GUI ScummVM désactivées (`--disable-translation`)
 - [x] Plus de bouton « Return to Launcher » dans le menu Ctrl+F5
@@ -223,34 +223,34 @@ Limites connues (réglées en 3b) :
   dur dans `ConfigManager`) ;
 - le backend Windows de ScummVM crée encore `%APPDATA%\ScummVM` (journaux) ;
 
-### 3b. Backend et infrastructure LolEN
+### 3b. Backend et infrastructure LoLEN
 - [ ] Remplacer la détection MD5 (`AdvancedDetector`) par une détection
       simplifiée ou des `GameFlags` fixes
-- [ ] Écrire un backend LolEN minimal (classes `LolEN…`) sur SDL2 ou SDL3 :
+- [ ] Écrire un backend LoLEN minimal (classes `LoLEN…`) sur SDL2 ou SDL3 :
       affichage, palette, événements, timer (`getMillis`, `delayMillis`), mixer
       audio, sauvegardes
-- [ ] Remplacer `ConfMan` par une configuration LolEN simple (`lolen.ini`)
+- [ ] Remplacer `ConfMan` par une configuration LoLEN simple (`lolen.ini`)
 - [ ] Remplacer le keymapper par une gestion directe du clavier
 - [ ] Remplacer ou retirer la GUI ScummVM restante : menu Ctrl+F5, `GUI::Debugger`
       (console de debug), macro de traduction `_()`
-- [ ] Prévoir un écran d'options LolEN (pilote musical, plein écran…), puisque
+- [ ] Prévoir un écran d'options LoLEN (pilote musical, plein écran…), puisque
       le menu Ctrl+F5 de ScummVM disparaîtra
 - [ ] Élaguer ensuite `common/`, `graphics/`, `image/`, `video/`, `gui/`
 
 ## Étape 4 : système de build et identité
 - [ ] Passer à CMake (retirer `/CMakeLists.txt` du `.gitignore`)
 - [x] Nommer l'exécutable `LandsOfLore.exe` (`EXECUTABLE` dans le `Makefile`) ;
-      le projet s'appelle LolEN, le moteur Kyra n'est pas renommé
-- [x] Icône LolEN (`icons/lolen.ico`, 16 à 256 px, générée depuis
+      le projet s'appelle LoLEN, le moteur Kyra n'est pas renommé
+- [x] Icône LoLEN (`icons/lolen.ico`, 16 à 256 px, générée depuis
       `saveScumm/icone.ico`), utilisée pour l'exe et la fenêtre ; icônes
       ScummVM `.ico`/`.icns`/`.svg` supprimées (`scummvm.xpm` reste, pour les
       autres systèmes)
 - [x] Splash : celui de ScummVM d'abord (conservé, par respect pour le projet
-      d'origine), puis celui de LolEN (`lolen/data/splash.bmp`, intégré comme
+      d'origine), puis celui de LoLEN (`lolen/data/splash.bmp`, intégré comme
       ressource `lolen_splash.bmp` dans `dists/scummvm.rc`, affiché par
-      `LolEN::showSplashScreen()` pendant 2 s, passable par une touche ou un clic ;
+      `LoLEN::showSplashScreen()` pendant 2 s, passable par une touche ou un clic ;
       le splash ScummVM passe de 0,6 s à 1 s, dans `engines/engine.cpp`)
-- [x] Informations de version de l'exe (produit LolEN, copyright ScummVM, GPL)
+- [x] Informations de version de l'exe (produit LoLEN, copyright ScummVM, GPL)
 - [x] Traductions de la GUI ScummVM désactivées par défaut dans `configure`
       (plus besoin de `--disable-translation`)
 - [ ] Intégrer `kyra.dat` dans l'exe ou le livrer à côté
@@ -264,4 +264,4 @@ Le jeu d'origine reste lançable sans aucun mod (voir « Règles impératives »
 - [ ] Musique de remplacement en OGG/MP3/FLAC. Le décodeur Vorbis est déjà lié ;
       MP3 (libmad) et FLAC demandent leurs bibliothèques.
 - [ ] Graphismes de remplacement
-- [ ] Choix du mod au lancement (ligne de commande ou configuration LolEN)
+- [ ] Choix du mod au lancement (ligne de commande ou configuration LoLEN)

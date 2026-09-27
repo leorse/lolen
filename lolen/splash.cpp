@@ -30,7 +30,7 @@
 
 #include "image/bmp.h"
 
-namespace LolEN {
+namespace LoLEN {
 
 // Name of the image in the resources of the executable (see dists/scummvm.rc)
 static const char *const kSplashFileName = "lolen_splash.bmp";
@@ -40,13 +40,13 @@ static const uint32 kSplashDuration = 2000;
 void showSplashScreen() {
 	Common::File file;
 	if (!file.open(Common::Path(kSplashFileName))) {
-		warning("LolEN splash screen '%s' not found", kSplashFileName);
+		warning("LoLEN splash screen '%s' not found", kSplashFileName);
 		return;
 	}
 
 	Image::BitmapDecoder bitmap;
 	if (!bitmap.loadStream(file)) {
-		warning("Could not load the LolEN splash screen '%s'", kSplashFileName);
+		warning("Could not load the LoLEN splash screen '%s'", kSplashFileName);
 		return;
 	}
 
@@ -101,4 +101,4 @@ void showSplashScreen() {
 	system.hideOverlay();
 }
 
-} // End of namespace LolEN
+} // End of namespace LoLEN

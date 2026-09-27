@@ -22,10 +22,10 @@
 #ifndef LOLEN_SPLASH_H
 #define LOLEN_SPLASH_H
 
-namespace LolEN {
+namespace LoLEN {
 
 /**
- * Shows the LolEN splash screen.
+ * Shows the LoLEN splash screen.
  *
  * The image is the "lolen_splash.bmp" resource embedded in the executable
  * (see dists/scummvm.rc). It is scaled to fit the window, keeping its aspect
@@ -34,6 +34,6 @@ namespace LolEN {
  */
 void showSplashScreen();
 
-} // End of namespace LolEN
+} // End of namespace LoLEN
 
 #endif

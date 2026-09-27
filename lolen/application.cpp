@@ -56,7 +56,7 @@
 #include "backends/keymapper/keymap.h"
 #include "backends/keymapper/keymapper.h"
 
-namespace LolEN {
+namespace LoLEN {
 
 // Name of the game domain in lolen.ini. It is also the prefix of the savegame file names.
 static const char *const kTarget = "lol";
@@ -66,7 +66,7 @@ static const char *const kGameId = "lol";
 
 static const char *const kConfigFileName = "lolen.ini";
 static const char *const kSaveDirName = "saves";
-static const char *const kWindowCaption = "LolEN - Lands of Lore: The Throne of Chaos";
+static const char *const kWindowCaption = "LoLEN - Lands of Lore: The Throne of Chaos";
 
 Application::Application(OSystem &system, const Common::Path &baseDir)
 	: _system(system), _baseDir(baseDir), _debugLevel(-1), _cmdFullscreen(false), _cmdWindowed(false) {
@@ -88,7 +88,7 @@ void Application::printUsage() const {
 	       "\n"
 	       "The settings are stored in lolen.ini next to the executable.\n"
 	       "\n"
-	       "LolEN is based on %s.\n", gScummVMFullVersion);
+	       "LoLEN is based on %s.\n", gScummVMFullVersion);
 }
 
 bool Application::parseCommandLine(int argc, const char *const argv[]) {
@@ -412,7 +412,7 @@ int Application::run(int argc, const char *const argv[]) {
 	if (result.getCode() != Common::kNoError) {
 		showError(Common::String::format(
 			"Lands of Lore was not found in '%s'.\n\n"
-			"Start LolEN with the game directory as argument, or set 'path' in the [%s] section of %s.",
+			"Start LoLEN with the game directory as argument, or set 'path' in the [%s] section of %s.",
 			ConfMan.getPath("path").toString(Common::Path::kNativeSeparator).c_str(), kTarget, kConfigFileName));
 	} else {
 		// Remember the settings (game path, detected language...) for the next start.
@@ -425,7 +425,7 @@ int Application::run(int argc, const char *const argv[]) {
 		} else {
 			PluginManager::instance().unloadPluginsExcept(PLUGIN_TYPE_ENGINE, enginePlugin);
 
-			// The ScummVM splash screen first, then the LolEN one. The engine does not show
+			// The ScummVM splash screen first, then the LoLEN one. The engine does not show
 			// the ScummVM splash screen again once it has been displayed.
 			splashScreen();
 			showSplashScreen();
@@ -442,4 +442,4 @@ int Application::run(int argc, const char *const argv[]) {
 	return result.getCode() == Common::kUserCanceled ? 0 : result.getCode();
 }
 
-} // End of namespace LolEN
+} // End of namespace LoLEN

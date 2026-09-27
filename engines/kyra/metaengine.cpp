@@ -116,7 +116,7 @@ bool KyraMetaEngine::hasFeature(MetaEngineFeature f) const {
 }
 
 bool Kyra::KyraEngine_v1::hasFeature(EngineFeature f) const {
-	// LolEN has no launcher, so kSupportsReturnToLauncher is not reported.
+	// LoLEN has no launcher, so kSupportsReturnToLauncher is not reported.
 	return
 	    (f == kSupportsLoadingDuringRuntime) ||
 	    (f == kSupportsSavingDuringRuntime) ||

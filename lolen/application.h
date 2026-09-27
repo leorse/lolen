@@ -31,13 +31,13 @@ class Plugin;
 struct DetectedGame;
 
 /**
- * LolEN - the Lands of Lore engine.
+ * LoLEN - the Lands of Lore engine.
  *
  * This namespace holds the code which replaces the ScummVM infrastructure
  * (entry point, launcher, configuration handling...). The game engine itself
  * is the ScummVM Kyra engine and keeps its original names.
  */
-namespace LolEN {
+namespace LoLEN {
 
 /**
  * Starts Lands of Lore directly, without any launcher.
@@ -87,6 +87,6 @@ private:
 	bool _cmdWindowed;
 };
 
-} // End of namespace LolEN
+} // End of namespace LoLEN
 
 #endif

@@ -19,13 +19,13 @@
  *
  */
 
-// Entry point of LolEN on Windows. It replaces the ScummVM entry point
+// Entry point of LoLEN on Windows. It replaces the ScummVM entry point
 // (backends/platform/sdl/win32/win32-main.cpp) and starts the game directly.
 
 // Disable symbol overrides so that we can use system headers.
 #define FORBIDDEN_SYMBOL_ALLOW_ALL
 
-// LolEN provides its own main(), SDL must not rename it to SDL_main.
+// LoLEN provides its own main(), SDL must not rename it to SDL_main.
 #define SDL_MAIN_HANDLED
 
 #include "common/scummsys.h"
@@ -43,19 +43,9 @@
 
 #include "lolen/application.h"
 
-int main(int argc, char *argv[]);
-
-int __stdcall WinMain(HINSTANCE /*hInst*/, HINSTANCE /*hPrevInst*/,  LPSTR /*lpCmdLine*/, int /*iShowCmd*/) {
-// MinGW-w64 based toolchains define __MINGW64_VERSION_MAJOR and provide __argc/__argv,
-// the old mingwrt toolchains only provide _argc/_argv.
-#if defined(__GNUC__) && defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
-	return main(_argc, _argv);
-#else
-	return main(__argc, __argv);
-#endif
-}
-
-int main(int argc, char *argv[]) {
+// Common entry point of the console (main) and GUI (WinMain) subsystems.
+// C++ does not allow calling main() from WinMain(), hence this function.
+static int runLoLEN(int argc, char *argv[]) {
 	SDL_SetMainReady();
 
 #ifdef UNICODE
@@ -72,7 +62,7 @@ int main(int argc, char *argv[]) {
 	assert(g_system);
 	g_system->init();
 
-	int res = LolEN::Application(*g_system, baseDir).run(argc, argv);
+	int res = LoLEN::Application(*g_system, baseDir).run(argc, argv);
 
 	g_system->destroy();
 
@@ -81,6 +71,20 @@ int main(int argc, char *argv[]) {
 #endif
 
 	return res;
+}
+
+int __stdcall WinMain(HINSTANCE /*hInst*/, HINSTANCE /*hPrevInst*/,  LPSTR /*lpCmdLine*/, int /*iShowCmd*/) {
+// MinGW-w64 based toolchains define __MINGW64_VERSION_MAJOR and provide __argc/__argv,
+// the old mingwrt toolchains only provide _argc/_argv.
+#if defined(__GNUC__) && defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+	return runLoLEN(_argc, _argv);
+#else
+	return runLoLEN(__argc, __argv);
+#endif
+}
+
+int main(int argc, char *argv[]) {
+	return runLoLEN(argc, argv);
 }
 
 #endif
