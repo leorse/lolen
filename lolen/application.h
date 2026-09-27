@@ -24,6 +24,7 @@
 
 #include "common/error.h"
 #include "common/path.h"
+#include "common/ptr.h"
 #include "common/str.h"
 
 class OSystem;
@@ -38,6 +39,8 @@ struct DetectedGame;
  * is the ScummVM Kyra engine and keeps its original names.
  */
 namespace LoLEN {
+
+class Config;
 
 /**
  * Starts Lands of Lore directly, without any launcher.
@@ -54,6 +57,7 @@ public:
 	 * @param baseDir  the directory holding the executable
 	 */
 	Application(OSystem &system, const Common::Path &baseDir);
+	~Application();
 
 	/** Runs the game and returns the process exit code. */
 	int run(int argc, const char *const argv[]);
@@ -77,6 +81,7 @@ private:
 
 	OSystem &_system;
 	const Common::Path _baseDir;
+	Common::ScopedPtr<Config> _config;
 
 	// Command line settings
 	Common::Path _cmdGamePath;

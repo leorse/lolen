@@ -202,6 +202,13 @@ public:
 
 	void                     flushToDisk(); /*!< Flush configuration to disk. */
 
+	/**
+	 * Function called by flushToDisk() instead of writing a configuration file.
+	 * LoLEN uses it to write its own configuration file format.
+	 */
+	typedef void (*FlushHandler)();
+	void                     setFlushHandler(FlushHandler handler) { _flushHandler = handler; } /*!< Set the flush handler, nullptr for the default behavior. */
+
 	void                     setActiveDomain(const String &domName); /*!< Set the given domain as active. */
 	Domain                  *getActiveDomain() { return _activeDomain; } /*!< Get the active domain. */
 	const Domain            *getActiveDomain() const { return _activeDomain; } /*!< @overload */
@@ -259,6 +266,8 @@ private:
 	Domain *		_activeDomain;
 
 	Path			_filename;
+
+	FlushHandler	_flushHandler;
 };
 
 /** @} */

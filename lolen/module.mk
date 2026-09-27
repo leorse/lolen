@@ -2,6 +2,7 @@ MODULE := lolen
 
 MODULE_OBJS := \
 	application.o \
+	config.o \
 	splash.o
 
 ifdef WIN32

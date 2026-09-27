@@ -219,23 +219,53 @@ Limites connues (réglées en 3b) :
 - le menu ScummVM en jeu (Ctrl+F5) est toujours là, en anglais, avec le thème
   intégré de ScummVM ; c'est aussi le seul écran qui permet de choisir le pilote
   musical (sinon `music_driver` dans `lolen.ini`) ;
-- la section générale de `lolen.ini` s'appelle encore `[scummvm]` (nom codé en
-  dur dans `ConfigManager`) ;
 - le backend Windows de ScummVM crée encore `%APPDATA%\ScummVM` (journaux) ;
 
-### 3b. Backend et infrastructure LoLEN
-- [ ] Remplacer la détection MD5 (`AdvancedDetector`) par une détection
-      simplifiée ou des `GameFlags` fixes
-- [ ] Écrire un backend LoLEN minimal (classes `LoLEN…`) sur SDL2 ou SDL3 :
-      affichage, palette, événements, timer (`getMillis`, `delayMillis`), mixer
-      audio, sauvegardes
-- [ ] Remplacer `ConfMan` par une configuration LoLEN simple (`lolen.ini`)
-- [ ] Remplacer le keymapper par une gestion directe du clavier
-- [ ] Remplacer ou retirer la GUI ScummVM restante : menu Ctrl+F5, `GUI::Debugger`
-      (console de debug), macro de traduction `_()`
-- [ ] Prévoir un écran d'options LoLEN (pilote musical, plein écran…), puisque
-      le menu Ctrl+F5 de ScummVM disparaîtra
-- [ ] Élaguer ensuite `common/`, `graphics/`, `image/`, `video/`, `gui/`
+### 3b. Infrastructure LoLEN
+Besoins exprimés : garder une interface pour **changer la langue** ; plus tard,
+**manettes**, **réaffectation des commandes** et écran des **crédits** (contenu
+de `AUTHORS`). ScummVM fournit déjà les briques nécessaires (framework de GUI,
+keymapper avec manettes et écran de réaffectation, défilement des crédits) : on
+les garde et on construit les écrans LoLEN par-dessus, au lieu de tout réécrire.
+
+#### 3b.1 Configuration LoLEN (fait)
+- [x] `LoLEN::Config` (`lolen/config.cpp`) lit et écrit `lolen.ini` en sections :
+      `[game]`, `[sound]`, `[display]`, `[controls]` (domaine `keymapper`,
+      réaffectations clavier/manette), `[debug]`, `[internal]` (tout autre
+      réglage, pour ne rien perdre)
+- [x] Chaque réglage documenté est commenté ; une valeur par défaut est écrite
+      en commentaire (`;subtitles=false`) pour ne pas l'imposer au moteur
+- [x] `ConfMan` reste l'adaptateur du moteur et du backend : `ConfigManager`
+      a un point d'accroche (`setFlushHandler`) et `ConfMan.flushToDisk()`
+      écrit `lolen.ini` au format LoLEN (y compris quand on change les options
+      dans le menu du jeu)
+- [x] L'ancien format (`[scummvm]`, `[lol]`) est relu et converti
+
+#### 3b.2 Menu LoLEN (à la place du menu Ctrl+F5 de ScummVM)
+- [ ] Langue du jeu (le moteur est relancé dans la nouvelle langue)
+- [ ] Son : pilote musical (AdLib, MT-32 émulé, GM…), volumes
+- [ ] Affichage : plein écran, filtrage, correction d'aspect
+- [ ] Commandes : écran de réaffectation clavier et manette du keymapper
+- [ ] Crédits : défilement de `AUTHORS` (avec une section LoLEN/Kyra en tête)
+- [ ] Quitter
+- [ ] Retirer le reste de la GUI ScummVM (options globales, navigateurs,
+      sauvegarde/chargement façon ScummVM, aide…)
+- [ ] Langue du menu lui-même : polices bitmap limitées à l'anglais par
+      ScummVM ; à traiter (FreeType + TTF, ou adapter ce contrôle)
+
+#### 3b.3 Détection simplifiée
+- [ ] Remplacer `AdvancedDetector` et le système de plugins par une détection
+      LoLEN (empreintes MD5 de `detection_tables.h`), toutes versions conservées
+
+#### 3b.4 Backend
+- [ ] Garder le backend SDL de ScummVM (fenêtre, événements, **manettes**,
+      mixer) et en retirer l'inutile : OpenGL/shaders si non nécessaires,
+      scalers superflus, journaux dans `%APPDATA%\ScummVM`
+- [ ] Réécriture complète en classes `LoLEN…` : optionnelle, plus tard
+
+#### 3b.5 Élagage final
+- [ ] Supprimer ce qui n'est plus lié dans `common/`, `graphics/`, `audio/`,
+      `image/`, `video/`, `backends/`, `gui/`
 
 ## Étape 4 : système de build et identité
 - [ ] Passer à CMake (retirer `/CMakeLists.txt` du `.gitignore`)

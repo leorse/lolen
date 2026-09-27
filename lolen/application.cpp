@@ -23,6 +23,7 @@
 #define FORBIDDEN_SYMBOL_EXCEPTION_printf
 
 #include "lolen/application.h"
+#include "lolen/config.h"
 
 #include "lolen/splash.h"
 
@@ -70,6 +71,9 @@ static const char *const kWindowCaption = "LoLEN - Lands of Lore: The Throne of 
 
 Application::Application(OSystem &system, const Common::Path &baseDir)
 	: _system(system), _baseDir(baseDir), _debugLevel(-1), _cmdFullscreen(false), _cmdWindowed(false) {
+}
+
+Application::~Application() {
 }
 
 void Application::printUsage() const {
@@ -187,14 +191,20 @@ void Application::registerDefaults() {
 }
 
 void Application::loadConfig() {
-	ConfMan.loadConfigFile(_baseDir.join(kConfigFileName), Common::Path());
+	_config.reset(new Config(_baseDir.join(kConfigFileName), kTarget));
+	if (!_config->load())
+		debug("Creating configuration file: %s", _config->getFilename().toString(Common::Path::kNativeSeparator).c_str());
+
+	// From now on, ConfMan.flushToDisk() (called by the engine when its options change)
+	// writes lolen.ini in the LoLEN format.
+	_config->install();
 
 	// Savegames are stored next to the executable, unless the user chose another place.
-	if (!ConfMan.hasKey("savepath", Common::ConfigManager::kApplicationDomain)) {
+	if (!ConfMan.hasKey("savepath", kTarget) && !ConfMan.hasKey("savepath", Common::ConfigManager::kApplicationDomain)) {
 		Common::FSNode saveDir(_baseDir.join(kSaveDirName));
 		if (!saveDir.exists() && !saveDir.createDirectory())
 			warning("Could not create the savegame directory '%s'", saveDir.getPath().toString(Common::Path::kNativeSeparator).c_str());
-		ConfMan.setPath("savepath", saveDir.getPath(), Common::ConfigManager::kApplicationDomain);
+		ConfMan.setPath("savepath", saveDir.getPath(), kTarget);
 	}
 
 	if (_debugLevel == -1 && ConfMan.hasKey("debuglevel"))
@@ -412,8 +422,8 @@ int Application::run(int argc, const char *const argv[]) {
 	if (result.getCode() != Common::kNoError) {
 		showError(Common::String::format(
 			"Lands of Lore was not found in '%s'.\n\n"
-			"Start LoLEN with the game directory as argument, or set 'path' in the [%s] section of %s.",
-			ConfMan.getPath("path").toString(Common::Path::kNativeSeparator).c_str(), kTarget, kConfigFileName));
+			"Start LoLEN with the game directory as argument, or set 'path' in the [game] section of %s.",
+			ConfMan.getPath("path").toString(Common::Path::kNativeSeparator).c_str(), kConfigFileName));
 	} else {
 		// Remember the settings (game path, detected language...) for the next start.
 		ConfMan.flushToDisk();
@@ -434,9 +444,13 @@ int Application::run(int argc, const char *const argv[]) {
 			if (result.getCode() != Common::kNoError && result.getCode() != Common::kUserCanceled)
 				showError("Error running Lands of Lore: " + result.getDesc());
 		}
+
+		// Settings changed while playing (window size...)
+		_config->save();
 	}
 
 	DebugMan.removeAllDebugChannels();
+	_config.reset();
 	shutdown();
 
 	return result.getCode() == Common::kUserCanceled ? 0 : result.getCode();

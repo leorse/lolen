@@ -50,7 +50,7 @@ char const *const ConfigManager::kCloudDomain = "cloud";
 #pragma mark -
 
 
-ConfigManager::ConfigManager() : _activeDomain(nullptr) {
+ConfigManager::ConfigManager() : _activeDomain(nullptr), _flushHandler(nullptr) {
 }
 
 void ConfigManager::defragment() {
@@ -75,6 +75,7 @@ void ConfigManager::copyFrom(ConfigManager &source) {
 	_activeDomainName = source._activeDomainName;
 	_activeDomain = &_gameDomains[_activeDomainName];
 	_filename = source._filename;
+	_flushHandler = source._flushHandler;
 }
 
 
@@ -284,6 +285,11 @@ bool ConfigManager::loadFromStream(SeekableReadStream &stream) {
 }
 
 void ConfigManager::flushToDisk() {
+	if (_flushHandler) {
+		_flushHandler();
+		return;
+	}
+
 #ifndef __DC__
 	WriteStream *stream;
 
