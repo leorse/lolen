@@ -169,8 +169,6 @@ public:
 	void stopCurFunc() { if (_currentTim) cmd_stopCurFunc(0); }
 	void stopAllFuncs(TIM *tim);
 
-	void refreshTimersAfterPause(uint32 elapsedTime);
-
 	void displayText(uint16 textId, int16 flags);
 	void displayText(uint16 textId, int16 flags, uint8 color);
 	void setupTextPalette(uint index, int fadePalette);

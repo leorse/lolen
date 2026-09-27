@@ -380,73 +380,7 @@ Common::Archive *ResLoaderPak::load(Common::ArchiveMemberPtr memberFile, Common:
 	return result.release();
 }
 
-// -> ResLoaderInsMalcolm implementation
-
-bool ResLoaderInsMalcolm::checkFilename(const Common::String &filename) const {
-	Common::String filenameFixed(filename);
-	filenameFixed.toUppercase();
-	if (!filenameFixed.hasSuffix(".001"))
-		return false;
-	return true;
-}
-
-bool ResLoaderInsMalcolm::isLoadable(const Common::String &filename, Common::SeekableReadStream &stream) const {
-	stream.seek(3, SEEK_SET);
-	int32 size = stream.readUint32LE();
-
-	if (size + 7 > stream.size())
-		return false;
-
-	stream.seek(size + 4, SEEK_SET);
-	uint8 buffer[3];
-	stream.read(&buffer, 3);
-
-	return (buffer[0] == 0x0D && buffer[1] == 0x0A) || (buffer[1] == 0x0D && buffer[2] == 0x0A);
-}
-
-Common::Archive *ResLoaderInsMalcolm::load(Common::ArchiveMemberPtr memberFile, Common::SeekableReadStream &stream) const {
-	Common::List<Common::String> filenames;
-	Common::ScopedPtr<PlainArchive> result(new PlainArchive(memberFile));
-	if (!result)
-		return nullptr;
-
-	// thanks to eriktorbjorn for this code (a bit modified though)
-	stream.seek(3, SEEK_SET);
-
-	// first file is the index table
-	uint32 size = stream.readUint32LE();
-	Common::String temp;
-
-	for (uint32 i = 0; i < size; ++i) {
-		byte c = stream.readByte();
-
-		if (c == '\\') {
-			temp.clear();
-		} else if (c == 0x0D) {
-			// line endings are CRLF
-			c = stream.readByte();
-			assert(c == 0x0A);
-			++i;
-
-			filenames.push_back(temp);
-			temp.clear();
-		} else {
-			temp += (char)c;
-		}
-	}
-
-	stream.seek(3, SEEK_SET);
-
-	for (Common::List<Common::String>::iterator file = filenames.begin(); file != filenames.end(); ++file) {
-		const uint32 fileSize = stream.readUint32LE();
-		const uint32 fileOffset = stream.pos();
-
-		result->addFileEntry(Common::Path(*file, Common::Path::kNoSeparator), PlainArchive::Entry(fileOffset, fileSize));
-		stream.seek(fileSize, SEEK_CUR);
-	}
-
-	return result.release();
-}
+// -> ResLoaderTlk implementation
 
 bool ResLoaderTlk::checkFilename(const Common::String &filename) const {
 	Common::String filenameFixed(filename);

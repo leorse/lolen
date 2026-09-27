@@ -127,11 +127,6 @@ Common::Error KyraMetaEngine::createInstance(OSystem *syst, Engine **engine, con
 	Kyra::GameFlags flags = gd->flags;
 
 	flags.lang = gd->desc.language;
-	flags.platform = gd->desc.platform;
-
-	Common::Platform platform = Common::parsePlatform(ConfMan.get("platform"));
-	if (platform != Common::kPlatformUnknown)
-		flags.platform = platform;
 
 	if (flags.lang == Common::UNK_LANG) {
 		Common::Language lang = Common::parseLanguage(ConfMan.get("language"));

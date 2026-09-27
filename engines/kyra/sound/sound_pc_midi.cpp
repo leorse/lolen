@@ -124,32 +124,13 @@ bool SoundMidiPC::init() {
 	if (_nativeMT32 && _type == kMidiMT32) {
 		midiFile = "LOREINTR";
 
-		if (_vm->gameFlags().isDemo) {
-			if (_vm->gameFlags().isTalkie) {
-				pakFile = "ISTARTUP.PAK";
-			} else if (_vm->resource()->exists("INTROVOC.PAK")) {
-				// Intro demo
-				pakFile = "INTROVOC.PAK";
-			} else {
-				// SEQ player based demo
-				pakFile = "GENERAL.PAK";
-				midiFile = "LOLSYSEX";
-			}
-		} else {
-			if (_vm->gameFlags().isTalkie)
-				pakFile =  (_vm->_flags.lang == Common::FR_FRA) ? "FRE/STARTUP.PAK" : (_vm->_flags.lang == Common::DE_DEU ? "GER/STARTUP.PAK" : "ENG/STARTUP.PAK");
-			else
-				pakFile = "INTROVOC.PAK";
-		}
-	} else if (_type == kMidiGM) {
-		if (_vm->gameFlags().isDemo && _vm->resource()->exists("INTROVOC.PAK")) {
-			// Intro demo
-			midiFile = "LOREINTR";
+		if (_vm->gameFlags().isTalkie)
+			pakFile =  (_vm->_flags.lang == Common::FR_FRA) ? "FRE/STARTUP.PAK" : (_vm->_flags.lang == Common::DE_DEU ? "GER/STARTUP.PAK" : "ENG/STARTUP.PAK");
+		else
 			pakFile = "INTROVOC.PAK";
-		} else {
-			midiFile = "LOLSYSEX";
-			pakFile = "GENERAL.PAK";
-		}
+	} else if (_type == kMidiGM) {
+		midiFile = "LOLSYSEX";
+		pakFile = "GENERAL.PAK";
 	}
 
 	if (!midiFile)

@@ -19,7 +19,6 @@
  *
  */
 
-
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
 
@@ -576,7 +575,6 @@ void LoLEngine::drawBlockObjects(int blockArrayIndex) {
 
 				if (shp)
 					fy += (shp[2] >> 2);
-
 			} else {
 				shp = (_itemProperties[i->itemPropertyIndex].flags & 0x40) ? _gameShapes[_itemProperties[i->itemPropertyIndex].shpIndex] :
 				      _itemShapes[_gameShapeMap[_itemProperties[i->itemPropertyIndex].shpIndex << 1]];
@@ -635,11 +633,11 @@ void LoLEngine::drawMonster(uint16 id) {
 
 	int bloodType = m->properties->flags & 0xC000;
 	if (bloodType == 0x4000)
-		bloodType = _flags.use16ColorMode ? 0xBB : 63;
+		bloodType = 63;
 	else if (bloodType == 0x8000)
-		bloodType = _flags.use16ColorMode ? 0x55 : 15;
+		bloodType = 15;
 	else if (bloodType == 0xC000)
-		bloodType = _flags.use16ColorMode ? 0x33 : 74;
+		bloodType = 74;
 	else
 		bloodType = 0;
 
@@ -873,14 +871,6 @@ void LoLEngine::drawDoor(uint8 *shape, uint8 *doorPalette, int index, int unk2, 
 	if (d > 7)
 		d = 7;
 
-	if (_flags.use16ColorMode) {
-		uint8 bb = _blockBrightness >> 4;
-		if (d > bb)
-			d -= bb;
-		else
-			d = 0;
-	}
-
 	uint8 *brightnessOverlay = _screen->getLevelOverlay(d);
 	int doorScaledWitdh = _screen->getShapeScaledWidth(shape, _dmScaleW);
 
@@ -925,7 +915,7 @@ uint8 *LoLEngine::drawItemOrMonster(uint8 *shape, uint8 *monsterPalette, int x, 
 		ovl2 = monsterPalette;
 		monsterPalette = 0;
 	} else {
-		ovl2 = _screen->getLevelOverlay(_flags.use16ColorMode ? 5 : 4);
+		ovl2 = _screen->getLevelOverlay(4);
 	}
 
 	int r = calcDrawingLayerParameters(x, y, _shpDmX, _shpDmY, _dmScaleW, _dmScaleH, shape, vflip);
@@ -933,13 +923,6 @@ uint8 *LoLEngine::drawItemOrMonster(uint8 *shape, uint8 *monsterPalette, int x, 
 	if (tblValue == -1) {
 		r = 7 - ((r / 3) - 1);
 		r = CLIP(r, 0, 7);
-		if (_flags.use16ColorMode) {
-			uint8 bb = _blockBrightness >> 4;
-			if (r > bb)
-				r -= bb;
-			else
-				r = 0;
-		}
 		brightnessOverlay = _screen->getLevelOverlay(r);
 	} else {
 		memset(tmpOvl + 1, tblValue, 15);
@@ -954,17 +937,11 @@ uint8 *LoLEngine::drawItemOrMonster(uint8 *shape, uint8 *monsterPalette, int x, 
 	if (flags & 0x40)
 		flg |= 2;
 
-	if (_flags.use16ColorMode) {
-		if (_currentLevel != 22)
-			flg &= 0xDFFF;
-
+	if (_currentLevel == 22) {
+		if (brightnessOverlay)
+			brightnessOverlay[255] = 0;
 	} else {
-		if (_currentLevel == 22) {
-			if (brightnessOverlay)
-				brightnessOverlay[255] = 0;
-		} else {
-			flg |= 0x2000;
-		}
+		flg |= 0x2000;
 	}
 
 	_shpDmX += ((_dmScaleW * fineX) >> 8);
@@ -1254,7 +1231,6 @@ bool LoLEngine::chasePartyWithDistanceAttacks(LoLMonster *monster) {
 
 				inflictDamage(i, 20, 0xFFFF, 0, 2);
 			}
-
 		} else if (flyingObject == 3) {
 			// shriek
 			for (int i = 0; i < 30; i++) {
@@ -1262,10 +1238,8 @@ bool LoLEngine::chasePartyWithDistanceAttacks(LoLMonster *monster) {
 					setMonsterMode(monster, 7);
 			}
 			_txt->printMessage(2, "%s", getLangString(0x401A));
-
 		} else if (flyingObject == 4) {
 			launchMagicViper();
-
 		} else {
 			return false;
 		}
@@ -1304,7 +1278,6 @@ void LoLEngine::chasePartyWithCloseAttacks(LoLMonster *monster) {
 
 				setMonsterMode(monster, 8);
 				checkSceneUpdateNeed(monster->block);
-
 			} else {
 				setMonsterDirection(monster, dir);
 				checkSceneUpdateNeed(monster->block);
@@ -1527,7 +1500,6 @@ void LoLEngine::moveStrayingMonster(LoLMonster *monster) {
 			d = (d + monster->fightCurTick) & 6;
 		}
 		setMonsterMode(monster, 3);
-
 	} else {
 		monster->direction &= 6;
 		getNextStepCoords(monster->x, monster->y, x, y, monster->direction);

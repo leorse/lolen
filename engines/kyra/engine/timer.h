@@ -74,11 +74,7 @@ public:
 	void enable(uint8 id);
 	void disable(uint8 id);
 
-	void loadDataFromFile(Common::SeekableReadStream &file, int version);
-	void saveDataToFile(Common::WriteStream &file) const;
-
 private:
-	void resync();
 
 	KyraEngine_v1 *_vm;
 	OSystem *_system;

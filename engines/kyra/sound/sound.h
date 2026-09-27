@@ -43,46 +43,6 @@ struct SoundResourceInfo_PC {
 	uint fileListSize;
 };
 
-struct SoundResourceInfo_Towns {
-	SoundResourceInfo_Towns(const char *const *files, int numFiles, const int32 *cdaTbl, int cdaTblSize) : fileList(files), fileListSize(numFiles), cdaTable(cdaTbl), cdaTableSize(cdaTblSize) {}
-	const char *const *fileList;
-	uint fileListSize;
-	const int32 *cdaTable;
-	uint cdaTableSize;
-};
-
-struct SoundResourceInfo_PC98 {
-	SoundResourceInfo_PC98(const char *fileNamePattern) : pattern(fileNamePattern) {}
-	const char *pattern;
-};
-
-struct SoundResourceInfo_TownsPC98V2 {
-	SoundResourceInfo_TownsPC98V2(const char *const *files, int numFiles, const char *fileNamePattern, const uint16 *cdaTbl, int cdaTblSize) : fileList(files), fileListSize(numFiles), pattern(fileNamePattern), cdaTable(cdaTbl), cdaTableSize(cdaTblSize) {}
-	const char *const *fileList;
-	uint fileListSize;
-	const char *pattern;
-	const uint16 *cdaTable;
-	uint cdaTableSize;
-};
-
-struct SoundResourceInfo_TownsEoB {
-	SoundResourceInfo_TownsEoB(const char *const *filelist, uint numfiles, const uint8 *pcmdata, uint pcmdataSize, int pcmvolume) : fileList(filelist), numFiles(numfiles), pcmData(pcmdata), pcmDataSize(pcmdataSize), pcmVolume(pcmvolume) {}
-	const uint8 *pcmData;
-	uint pcmDataSize;
-	int pcmVolume;
-	const char *const *fileList;
-	uint numFiles;
-};
-
-
-struct SoundResourceInfo_AmigaEoB {
-	SoundResourceInfo_AmigaEoB(const char *const *files, int numFiles, const char *const *soundmap, int numSounds) : fileList(files), fileListSize(numFiles), soundList(soundmap), soundListSize(numSounds) {}
-	const char *const *fileList;
-	uint fileListSize;
-	const char *const *soundList;
-	uint soundListSize;
-};
-
 /**
  * Analog audio output device API for Kyrandia games.
  * It contains functionality to play music tracks,
@@ -97,13 +57,7 @@ public:
 		kAdLib,
 		kMidiMT32,
 		kMidiGM,
-		kTowns,
-		kPC98,
-		kPCSpkr,
-		kPCjr,
-		kAmiga,
-		kSegaCD,
-		kMac
+		kPCSpkr
 	};
 
 	virtual kType getMusicType() const = 0;

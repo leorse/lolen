@@ -69,9 +69,6 @@ public:
 	// special WSA handling
 	void wsaFrameAnimationStep(int x1, int y1, int x2, int y2, int w1, int h1, int w2, int h2, int srcPage, int dstPage, int dim);
 
-	// used in non-interactive HoF/LoL demos
-	void copyPageMemory(int srcPage, int srcPos, int dstPage, int dstPos, int numBytes);
-	void copyRegionEx(int srcPage, int srcW, int srcH, int dstPage, int dstX,int dstY, int dstW, int dstH, const ScreenDim *d, bool flag = false);
 protected:
 	uint8 *_wsaFrameAnimBuffer;
 };

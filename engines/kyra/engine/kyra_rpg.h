@@ -22,7 +22,6 @@
 #ifndef KYRA_RPG_H
 #define KYRA_RPG_H
 
-
 #include "kyra/kyra_v1.h"
 #include "kyra/graphics/screen.h"
 #include "kyra/gui/gui.h"
@@ -65,10 +64,7 @@ struct LevelTempData {
 	const uint16 *flags;
 	const void *monsters;
 	const void *flyingObjects;
-	const void *wallsOfForce;
 	uint8 monsterDifficulty;
-	// ScummVM extra feature for EOBI/II
-	const void *automapExploreState;
 };
 
 struct EoBFlyingObject {
@@ -316,37 +312,11 @@ protected:
 	bool checkSceneUpdateNeed(int block);
 	uint16 calcNewBlockPosition(uint16 curBlock, uint16 direction);
 
-	void setVcnFormat(int outputBPP, Common::RenderMode renderMode);
 	void drawVcnBlocks();
-	void vcnDraw_fw_4bit(uint8 *&dst, const uint8 *&src);
-	void vcnDraw_bw_4bit(uint8 *&dst, const uint8 *&src);
-	template<bool cga> void vcnDraw_fw_trans_4bit(uint8 *&dst, const uint8 *&src);
-	template<bool cga> void vcnDraw_bw_trans_4bit(uint8 *&dst, const uint8 *&src);
-	template<typename T> void vcnDraw_fw_hiCol(uint8 *&dst, const uint8 *&src);
-	template<typename T> void vcnDraw_bw_hiCol(uint8 *&dst, const uint8 *&src);
-	template<typename T> void vcnDraw_fw_trans_hiCol(uint8 *&dst, const uint8 *&src);
-	template<typename T> void vcnDraw_bw_trans_hiCol(uint8 *&dst, const uint8 *&src);
-	void vcnDraw_fw_planar(uint8 *&dst, const uint8 *&src);
-	void vcnDraw_bw_planar(uint8 *&dst, const uint8 *&src);
-	void vcnDraw_fw_trans_planar(uint8 *&dst, const uint8 *&src);
-	void vcnDraw_bw_trans_planar(uint8 *&dst, const uint8 *&src);
-
-	typedef Common::Functor2Mem<uint8 *&, const uint8 *&, void, KyraRpgEngine> VcnDrawProc;
-	struct VcnLineDrawingMethods {
-		VcnLineDrawingMethods(VcnDrawProc *fw, VcnDrawProc *bw, VcnDrawProc *fw_t, VcnDrawProc *bw_t) : forward(fw), backwards(bw), forward_trans(fw_t), backwards_trans(bw_t) {}
-		~VcnLineDrawingMethods() {
-			delete forward;
-			delete backwards;
-			delete forward_trans;
-			delete backwards_trans;
-		}
-
-		VcnDrawProc *forward;
-		VcnDrawProc *backwards;
-		VcnDrawProc *forward_trans;
-		VcnDrawProc *backwards_trans;
-	};
-	VcnLineDrawingMethods *_vcnDrawLine;
+	void vcnDraw_fw(uint8 *&dst, const uint8 *&src);
+	void vcnDraw_bw(uint8 *&dst, const uint8 *&src);
+	void vcnDraw_fw_trans(uint8 *&dst, const uint8 *&src);
+	void vcnDraw_bw_trans(uint8 *&dst, const uint8 *&src);
 
 	virtual int clickedDoorSwitch(uint16 block, uint16 direction) = 0;
 	int clickedWallShape(uint16 block, uint16 direction);
@@ -358,7 +328,6 @@ protected:
 	void processDoorSwitch(uint16 block, int openClose);
 	void openCloseDoor(int block, int openClose);
 	void completeDoorOperations();
-	bool isSpecialDoor(int block);
 
 	uint8 *_wllVmpMap;
 	int8 *_wllShapeMap;
@@ -379,14 +348,9 @@ protected:
 	uint16 *_vmpPtr;
 	uint8 *_vcnBlocks;
 	uint8 *_vcfBlocks;
-	uint8 *_vcnTransitionMask;
-	uint8 *_vcnMaskTbl;
 	uint8 *_vcnShift;
 	uint8 _vcnShiftVal;
 	uint8 *_vcnColTable;
-	const void *_vcnHiColorPalette;
-	uint8 _vcnSrcBitsPerPixel;
-	uint8 _vcnBpp;
 	uint16 *_blockDrawingBuffer;
 	uint8 *_sceneWindowBuffer;
 	uint8 _blockBrightness;
@@ -440,7 +404,6 @@ protected:
 
 	const uint16 *_vmpVisOffs;
 	static const uint16 _vmpOffsetsDefault[9];
-	static const uint16 _vmpOffsetsSegaCD[9];
 
 	// Script
 	virtual void runLevelScript(int block, int flags) = 0;
@@ -486,7 +449,6 @@ protected:
 	virtual TextDisplayer_rpg *txt() { return _txt; }
 
 	bool _dialogueField;
-	bool _dialogueFieldAmiga;
 	Screen::FontId _buttonFont;
 
 	const char *_dialogueButtonString[9];
@@ -524,12 +486,6 @@ protected:
 	void restoreFlyingObjectTempData(LevelTempData *tmp);
 	const void *generateFlyingObjectTempData() const;
 	void releaseFlyingObjectTempData(LevelTempData *tmp);
-	virtual const void *generateWallOfForceTempData() const { return nullptr; }
-	virtual void restoreWallOfForceTempData(LevelTempData *tmp) {}
-	virtual void releaseWallOfForceTempData(LevelTempData *tmp) {}
-	virtual const void *generateAutoMapTempData() { return nullptr; }
-	virtual void restoreAutoMapTempData(LevelTempData *tmp) {}
-	virtual void releaseAutoMapTempData(LevelTempData *tmp) {}
 
 	LevelTempData *_lvlTempData[29];
 	const int _numFlyingObjects;
@@ -558,6 +514,5 @@ protected:
 };
 
 } // End of namespace Kyra
-
 
 #endif

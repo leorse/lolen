@@ -19,7 +19,6 @@
  *
  */
 
-
 #ifndef KYRA_TEXT_EOB_H
 #define KYRA_TEXT_EOB_H
 
@@ -48,7 +47,6 @@ public:
 	void resetDimTextPositions(int dim);
 	void resetPageBreakString();
 	void setPageBreakFlag();
-	void removePageBreakFlag();
 
 	void allowPageBreak(bool mode) { _allowPageBreak = mode; }
 	void setWaitButtonMode(int mode) { _waitButtonMode = mode; }
@@ -75,7 +73,6 @@ protected:
 	virtual void textPageBreak();
 	void displayWaitButton();
 
-
 	char *_dialogueBuffer;
 
 	const char *_tempString1;
@@ -90,7 +87,6 @@ protected:
 
 	bool _printFlag;
 	bool _twoByteLineBreakFlag;
-	const bool _pc98TextMode;
 
 	Common::String _pageBreakString;
 	Common::String _scriptParaString;

@@ -19,7 +19,6 @@
  *
  */
 
-
 #include "kyra/engine/kyra_rpg.h"
 #include "kyra/sound/sound.h"
 
@@ -45,15 +44,10 @@ KyraRpgEngine::KyraRpgEngine(OSystem *system, const GameFlags &flags) : KyraEngi
 
 	_vcnBlocks = 0;
 	_vcfBlocks = 0;
-	_vcnTransitionMask = _vcnMaskTbl = 0;
 	_vcnShift = 0;
 	_vcnColTable = 0;
 	_vcnShiftVal = 0;
-	_vcnBpp = 1;
-	_vcnSrcBitsPerPixel = (_flags.platform == Common::kPlatformAmiga) ? 5 : (_flags.platform == Common::kPlatformFMTowns ? 8 : 4);
-	_vcnDrawLine = nullptr;
-	_vcnHiColorPalette = nullptr;
-	_vmpVisOffs = (flags.platform == Common::kPlatformSegaCD) ? _vmpOffsetsSegaCD : _vmpOffsetsDefault;
+	_vmpVisOffs = _vmpOffsetsDefault;
 
 	_vmpPtr = 0;
 	_blockBrightness = _wllVcnOffset = _wllVcnOffset2 = _wllVcnRmdOffset = 0;
@@ -130,7 +124,6 @@ KyraRpgEngine::KyraRpgEngine(OSystem *system, const GameFlags &flags) : KyraEngi
 	memset(_lvlTempData, 0, sizeof(_lvlTempData));
 
 	_dialogueField = false;
-	_dialogueFieldAmiga = true;
 
 	_environmentSfx = _environmentSfxVol = _envSfxDistThreshold = 0;
 	_monsterStepCounter = _monsterStepMode = 0;
@@ -143,9 +136,7 @@ KyraRpgEngine::KyraRpgEngine(OSystem *system, const GameFlags &flags) : KyraEngi
 	}
 
 	_buttonFont = Screen::FID_6_FNT;
-	if (_flags.platform == Common::kPlatformPC98)
-		_buttonFont = Screen::FID_SJIS_TEXTMODE_FNT;
-	else if (_flags.lang == Common::Language::ZH_TWN)
+	if (_flags.lang == Common::Language::ZH_TWN)
 		_buttonFont = Screen::FID_CHINESE_FNT;
 }
 
@@ -159,11 +150,9 @@ KyraRpgEngine::~KyraRpgEngine() {
 	delete[] _vcnColTable;
 	delete[] _vcnBlocks;
 	delete[] _vcfBlocks;
-	delete[] _vcnTransitionMask;
 	delete[] _vcnShift;
 	delete[] _blockDrawingBuffer;
 	delete[] _sceneWindowBuffer;
-	delete _vcnDrawLine;
 
 	delete[] _lvlShapeTop;
 	delete[] _lvlShapeBottom;
@@ -191,7 +180,7 @@ Common::Error KyraRpgEngine::init() {
 	_wllWallFlags = new uint8[256]();
 
 	_blockDrawingBuffer = new uint16[1320]();
-	_sceneWindowBuffer = nullptr;
+	_sceneWindowBuffer = new uint8[22 * 15 * 8 * 8]();
 
 	_lvlShapeTop = new int16[18]();
 	_lvlShapeBottom = new int16[18]();
@@ -200,9 +189,6 @@ Common::Error KyraRpgEngine::init() {
 	_vcnColTable = new uint8[128];
 	for (int i = 0; i < 128; i++)
 		_vcnColTable[i] = i & 0x0F;
-
-	setVcnFormat(1, Common::kRenderDefault);
-
 	_doorShapes = new uint8*[6]();
 
 	initStaticResource();
@@ -241,24 +227,14 @@ bool KyraRpgEngine::posWithinRect(int posX, int posY, int x1, int y1, int x2, in
 void KyraRpgEngine::drawDialogueButtons() {
 	int cp = screen()->setCurPage(0);
 	Screen::FontId of = screen()->setFont(_buttonFont);
-	int cs = (_flags.platform == Common::kPlatformPC98 && !_flags.use16ColorMode) ? screen()->setFontStyles(_buttonFont, Font::kStyleFat) : -1;
+	int cs = -1;
 
 	for (int i = 0; i < _dialogueNumButtons; i++) {
 		int x = _dialogueButtonPosX[i];
-		if (_flags.use16ColorMode) {
-			gui_drawBox(x, ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) & ~7) - 1, 74, 10, 0xEE, 0xCC, -1);
-			screen()->printText(_dialogueButtonString[i], (x + 37 - (screen()->getTextWidth(_dialogueButtonString[i])) / 2) & ~3,
-			                    ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) + 2) & ~7, _dialogueHighlightedButton == i ? 0xC1 : 0xE1, 0);
-		} else {
-			int yOffset = guiSettings()->buttons.txtOffsY;
-			if (_flags.lang == Common::JA_JPN && (_dialogueButtonString[i][0] & 0x80))
-				yOffset = 0;
-			screen()->set16bitShadingLevel(4);
-			gui_drawBox(x, (_dialogueButtonYoffs + _dialogueButtonPosY[i]), _dialogueButtonWidth, guiSettings()->buttons.height, guiSettings()->colors.frame1, guiSettings()->colors.frame2, guiSettings()->colors.fill);
-			screen()->set16bitShadingLevel(0);
-			screen()->printText(_dialogueButtonString[i], x + (_dialogueButtonWidth >> 1) - (screen()->getTextWidth(_dialogueButtonString[i])) / 2,
-				(_dialogueButtonYoffs + _dialogueButtonPosY[i]) + yOffset, _dialogueHighlightedButton == i ? _dialogueButtonLabelColor1 : _dialogueButtonLabelColor2, 0);
-		}
+		int yOffset = guiSettings()->buttons.txtOffsY;
+		gui_drawBox(x, (_dialogueButtonYoffs + _dialogueButtonPosY[i]), _dialogueButtonWidth, guiSettings()->buttons.height, guiSettings()->colors.frame1, guiSettings()->colors.frame2, guiSettings()->colors.fill);
+		screen()->printText(_dialogueButtonString[i], x + (_dialogueButtonWidth >> 1) - (screen()->getTextWidth(_dialogueButtonString[i])) / 2,
+			(_dialogueButtonYoffs + _dialogueButtonPosY[i]) + yOffset, _dialogueHighlightedButton == i ? _dialogueButtonLabelColor1 : _dialogueButtonLabelColor2, 0);
 	}
 	if (cs != -1)
 		screen()->setFontStyles(_buttonFont, cs);
@@ -272,7 +248,7 @@ uint16 KyraRpgEngine::processDialogue() {
 
 	for (int i = 0; i < _dialogueNumButtons; i++) {
 		int x = _dialogueButtonPosX[i] + _dialogueButtonXoffs;
-		int y = (_flags.use16ColorMode ? ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) & ~7) - 1 : (_dialogueButtonYoffs + _dialogueButtonPosY[i]));
+		int y = (_dialogueButtonYoffs + _dialogueButtonPosY[i]);
 		Common::Point p = getMousePos();
 		if (posWithinRect(p.x, p.y, x, y, x + _dialogueButtonWidth, y + guiSettings()->buttons.height)) {
 			_dialogueHighlightedButton = i;
@@ -308,7 +284,7 @@ uint16 KyraRpgEngine::processDialogue() {
 		if (e == 200 || e == 202) {
 			for (int i = 0; i < _dialogueNumButtons; i++) {
 				int x = _dialogueButtonPosX[i];
-				int y = (_flags.use16ColorMode ? ((_dialogueButtonYoffs + _dialogueButtonPosY[i]) & ~7) - 1 : (_dialogueButtonYoffs + _dialogueButtonPosY[i]));
+				int y = (_dialogueButtonYoffs + _dialogueButtonPosY[i]);
 				Common::Point p = getMousePos();
 				if (posWithinRect(p.x, p.y, x, y, x + _dialogueButtonWidth, y + guiSettings()->buttons.height)) {
 					_dialogueHighlightedButton = i;
@@ -344,10 +320,7 @@ uint16 KyraRpgEngine::processDialogue() {
 		screen()->fillRect(d->sx, d->sy + d->h - 9, d->sx + d->w - 1, d->sy + d->h - 1, d->col2);
 	} else {
 		const ScreenDim *d = screen()->_curDim;
-		if (gameFlags().use16ColorMode)
-			screen()->fillRect(d->sx, d->sy, d->sx + d->w - 3, d->sy + d->h - 2, d->col2);
-		else
-			screen()->fillRect(d->sx, d->sy, d->sx + d->w - 2, d->sy + d->h - 1, d->col2);
+		screen()->fillRect(d->sx, d->sy, d->sx + d->w - 2, d->sy + d->h - 1, d->col2);
 		txt()->clearDim(4);
 		txt()->resetDimTextPositions(4);
 	}

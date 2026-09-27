@@ -25,7 +25,6 @@
 #include "kyra/text/text_rpg.h"
 #include "common/scummsys.h"
 
-
 namespace Kyra {
 
 class Screen_LoL;
@@ -60,6 +59,5 @@ private:
 };
 
 } // End of namespace Kyra
-
 
 #endif

@@ -106,7 +106,6 @@ private:
 	FileMap _files;
 };
 
-
 class ResArchiveLoader {
 public:
 	virtual ~ResArchiveLoader() {}
@@ -116,13 +115,6 @@ public:
 };
 
 class ResLoaderPak : public ResArchiveLoader {
-public:
-	bool checkFilename(const Common::String &filename) const override;
-	bool isLoadable(const Common::String &filename, Common::SeekableReadStream &stream) const override;
-	Common::Archive *load(Common::ArchiveMemberPtr file, Common::SeekableReadStream &stream) const override;
-};
-
-class ResLoaderInsMalcolm : public ResArchiveLoader {
 public:
 	bool checkFilename(const Common::String &filename) const override;
 	bool isLoadable(const Common::String &filename, Common::SeekableReadStream &stream) const override;

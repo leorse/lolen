@@ -31,27 +31,16 @@ enum {
 	GI_LOL = 4
 };
 
+// Only the DOS floppy and DOS CD versions of Lands of Lore are supported.
 struct GameFlags {
 	Common::Language lang;
-
-	// Only for MR versions which have 4 languages instead of 3 (Simplified Chinese/Traditional Chinese)
-	Common::Language extraLang;
 
 	// language overwrites of fan translations (only needed for multilingual games)
 	Common::Language fanLang;
 	Common::Language replacedLang;
 
-	Common::Platform platform;
-
-	bool isDemo               : 1;
-	bool useAltShapeHeader    : 1;    // alternative shape header (uses 2 bytes more, those are unused though)
-	bool isTalkie             : 1;
-	bool isOldFloppy          : 1;
-	bool useHiRes             : 1;
-	bool use16ColorMode       : 1;
-	bool useHiColorMode       : 1;
-	bool useDigSound          : 1;
-	bool useInstallerPackage  : 1;
+	bool isTalkie             : 1;    // CD version
+	bool useInstallerPackage  : 1;    // floppy version with compressed installer files
 
 	byte gameID;
 };

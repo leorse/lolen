@@ -19,7 +19,6 @@
  *
  */
 
-
 #ifndef KYRA_SOUND_PCDRIVER_H
 #define KYRA_SOUND_PCDRIVER_H
 

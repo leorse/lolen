@@ -131,7 +131,6 @@ protected:
 	virtual Common::String getMenuItemTitle(const MenuItem &menuItem) = 0;
 	virtual Common::String getMenuItemLabel(const MenuItem &menuItem) = 0;
 
-	void updateAllMenuButtons();
 	void updateMenuButton(Button *button);
 	virtual void updateButton(Button *button);
 
@@ -139,7 +138,6 @@ protected:
 	void redrawHighlight(const Menu &menu);
 
 	uint32 _lastScreenUpdate;
-	void checkTextfieldInput();
 
 	int _menuLabelYOffset;
 };

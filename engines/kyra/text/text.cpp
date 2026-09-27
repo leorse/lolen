@@ -34,14 +34,9 @@ TextDisplayer::TextDisplayer(KyraEngine_v1 *vm, Screen *screen) {
 	_talkMessageY = 0xC;
 	_talkMessageH = 0;
 	_talkMessagePrinted = false;
-	_langExtraSpacing = (vm->gameFlags().lang == Common::KO_KOR) ? 2 : 0;
-	_lineBreakChar = (_vm->gameFlags().platform == Common::kPlatformMacintosh) ? '\n' : '\r';
-	memset(_talkSubstrings, 0, sizeof(_talkSubstrings));
+	_langExtraSpacing = 0;
+	_lineBreakChar = '\r';
 	memset(_talkBuffer, 0, sizeof(_talkBuffer));
-}
-
-void TextDisplayer::setTalkCoords(uint16 y) {
-	_talkCoords.y = y;
 }
 
 int TextDisplayer::getCenterStringX(const Common::String &str, int x1, int x2) {
@@ -60,11 +55,6 @@ int TextDisplayer::getCharLength(const char *str, int len) {
 		while (i <= len && *str) {
 			uint c = *str++;
 			c &= 0xFF;
-			if (c > 0x7F && (_vm->gameFlags().lang == Common::JA_JPN || _vm->gameFlags().lang == Common::KO_KOR)) {
-				c = READ_LE_UINT16(str - 1);
-				++charsCount;
-				++str;
-			}
 			i += _screen->getCharWidth(c);
 			++charsCount;
 		}
@@ -105,12 +95,9 @@ char *TextDisplayer::preprocessString(const char *str) {
 	}
 	p = _talkBuffer;
 
-	static const uint16 limDef[2] = { 176, 352 };
-	static const uint16 limKor[2] = { 240, 480 };
-	const uint16 *lim = (_vm->gameFlags().lang == Common::KO_KOR) ? limKor : limDef;
+	static const uint16 lim[2] = { 176, 352 };
 
-	Screen::FontId curFont = _screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT :
-						  _vm->gameFlags().lang == Common::KO_KOR ? Screen::FID_KOREAN_FNT : Screen::FID_8_FNT);
+	Screen::FontId curFont = _screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT : Screen::FID_8_FNT);
 	_screen->_charSpacing = -2;
 	int textWidth = _screen->getTextWidth(p);
 	_screen->_charSpacing = 0;
@@ -134,41 +121,6 @@ char *TextDisplayer::preprocessString(const char *str) {
 	return _talkBuffer;
 }
 
-int TextDisplayer::buildMessageSubstrings(const char *str) {
-	int currentLine = 0;
-	int pos = 0;
-	while (*str) {
-		if (*str == _lineBreakChar) {
-			assert(currentLine < TALK_SUBSTRING_NUM);
-			_talkSubstrings[currentLine * TALK_SUBSTRING_LEN + pos] = '\0';
-			++currentLine;
-			pos = 0;
-		} else {
-			_talkSubstrings[currentLine * TALK_SUBSTRING_LEN + pos] = *str;
-			++pos;
-			if (pos >= TALK_SUBSTRING_LEN - 2) {
-				pos = TALK_SUBSTRING_LEN - 2;
-			}
-		}
-		++str;
-	}
-	_talkSubstrings[currentLine * TALK_SUBSTRING_LEN + pos] = '\0';
-	return currentLine + 1;
-}
-
-int TextDisplayer::getWidestLineWidth(int linesCount) {
-	int maxWidth = 0;
-	_screen->_charSpacing = -2;
-	for (int l = 0; l < linesCount; ++l) {
-		int w = _screen->getTextWidth(&_talkSubstrings[l * TALK_SUBSTRING_LEN]);
-		if (maxWidth < w) {
-			maxWidth = w;
-		}
-	}
-	_screen->_charSpacing = 0;
-	return maxWidth;
-}
-
 void TextDisplayer::calcWidestLineBounds(int &x1, int &x2, int w, int cx) {
 	int margin = 12;
 	x1 = cx - w / 2;
@@ -185,55 +137,6 @@ void TextDisplayer::restoreTalkTextMessageBkgd(int srcPage, int dstPage) {
 		_talkMessagePrinted = false;
 		_screen->copyRegion(_talkCoords.x, _talkCoords.y, _talkCoords.x, _talkMessageY, _talkCoords.w, _talkMessageH, srcPage, dstPage, Screen::CR_NO_P_CHECK);
 	}
-}
-
-void TextDisplayer::printTalkTextMessage(const char *text, int x, int y, uint8 color, int srcPage, int dstPage) {
-	char *str = preprocessString(text);
-	int lineCount = buildMessageSubstrings(str);
-	// For Chinese we call this before recalculating the line count
-	int w = getWidestLineWidth(lineCount);
-	int marginTop = 0;
-
-	if (_vm->gameFlags().lang == Common::ZH_TWN) {
-		lineCount = (strlen(str) + 31) >> 5;
-		marginTop = 10;
-		w = MIN<int>(w, 302);
-	}
-
-	int top = y - (lineCount * _screen->getFontHeight() + (lineCount - 1) * _screen->_lineSpacing) - _langExtraSpacing;
-	if (top < marginTop)
-		top = marginTop;
-
-	_talkMessageY = top;
-	_talkMessageH = (lineCount * _screen->getFontHeight() + (lineCount - 1) * _screen->_lineSpacing) + _langExtraSpacing;
-
-	int x1 = 12;
-	int x2 = Screen::SCREEN_W - 12;
-	if (_vm->gameFlags().lang != Common::ZH_TWN || lineCount == 1)
-		calcWidestLineBounds(x1, x2, w, x);
-
-	_talkCoords.x = x1;
-	_talkCoords.w = w + 2;
-	_screen->copyRegion(_talkCoords.x, _talkMessageY, _talkCoords.x, _talkCoords.y, _talkCoords.w, _talkMessageH, srcPage, dstPage, Screen::CR_NO_P_CHECK);
-	int curPage = _screen->_curPage;
-	_screen->_curPage = srcPage;
-
-	if (_vm->gameFlags().platform == Common::kPlatformAmiga)
-		setTextColor(color);
-
-	if (_vm->gameFlags().lang == Common::ZH_TWN && lineCount > 1) {
-		// The Chinese version leaves the wrapping to the default font handling
-		printText(_talkSubstrings, 12, top, color, 0xC, 0xC);
-	} else {
-		for (int i = 0; i < lineCount; ++i) {
-			top = i * (_screen->getFontHeight() + _screen->_lineSpacing) + _talkMessageY;
-			char *msg = &_talkSubstrings[i * TALK_SUBSTRING_LEN];
-			int left = getCenterStringX(msg, x1, x2);
-			printText(msg, left, top, color, 0xC, _vm->gameFlags().lang == Common::ZH_TWN ? 0xC : 0);
-		}
-	}
-	_screen->_curPage = curPage;
-	_talkMessagePrinted = true;
 }
 
 void TextDisplayer::printText(const Common::String &str, int x, int y, uint8 c0, uint8 c1, uint8 c2) {
@@ -253,52 +156,6 @@ void TextDisplayer::printText(const Common::String &str, int x, int y, uint8 c0,
 	_screen->printText(tmp, x, y, c0, c2);
 	_screen->_charSpacing = 0;
 	_screen->_lineSpacing = ls;
-}
-
-void TextDisplayer::printCharacterText(const char *text, int8 charNum, int charX) {
-	int top, left, w, x;
-	char *msg;
-
-	text = preprocessString(text);
-	int lineCount = buildMessageSubstrings(text);
-	// For Chinese we call this before recalculating the line count
-	w = getWidestLineWidth(lineCount);
-
-	if (_vm->gameFlags().lang == Common::ZH_TWN) {
-		lineCount = (strlen(text) + 31) >> 5;
-		w = MIN<int>(w, 302);
-	}
-
-	int x1 = 12;
-	int x2 = Screen::SCREEN_W - 12;
-	if (_vm->gameFlags().lang != Common::ZH_TWN || lineCount == 1) {
-		x = charX;
-		calcWidestLineBounds(x1, x2, w, x);
-	}
-
-	uint8 color = 0;
-	if (_vm->gameFlags().platform == Common::kPlatformAmiga) {
-		const uint8 colorTable[] = { 0x1F, 0x1B, 0xC9, 0x80, 0x1E, 0x81, 0x11, 0xD8, 0x55, 0x3A, 0x3A };
-		color = colorTable[charNum];
-
-		setTextColor(color);
-	} else {
-		const uint8 colorTable[] = { 0x0F, 0x09, 0xC9, 0x80, 0x05, 0x81, 0x0E, 0xD8, 0x55, 0x3A, 0x3A };
-		color = colorTable[charNum];
-	}
-
-	if (_vm->gameFlags().lang == Common::ZH_TWN && lineCount > 1) {
-		// The Chinese version leaves the wrapping to the default font handling
-		printText(_talkSubstrings, 12, _talkMessageY, color, 0xC, 0xC);
-		return;
-	}
-
-	for (int i = 0; i < lineCount; ++i) {
-		top = i * (_screen->getFontHeight() + _screen->_lineSpacing) + _talkMessageY;
-		msg = &_talkSubstrings[i * TALK_SUBSTRING_LEN];
-		left = getCenterStringX(msg, x1, x2);
-		printText(msg, left, top, color, 0xC, _vm->gameFlags().lang == Common::ZH_TWN ? 0xC : 0);
-	}
 }
 
 void TextDisplayer::setTextColor(uint8 color) {

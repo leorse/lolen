@@ -25,7 +25,6 @@
 #include "kyra/gui/gui_lol.h"
 #include "kyra/sound/sound_intern.h"
 
-
 namespace Kyra {
 
 const LoLCharacter *StaticResource::loadCharData(int id, int &entries) {
@@ -133,7 +132,6 @@ bool StaticResource::loadCompassData(Common::SeekableReadStream &stream, void *&
 		t->flags = stream.readByte();
 	};
 
-
 	ptr = defs;
 	return true;
 }
@@ -213,42 +211,13 @@ void StaticResource::freeButtonDefs(void *&ptr, int &size) {
 
 void LoLEngine::initStaticResource() {
 	// assign music resource data.
-	if (_flags.platform == Common::kPlatformDOS) {
-		if (_flags.isDemo) {
-			static const char *const file[] = { "LOREDEMO" };
-			SoundResourceInfo_PC resInfoDemo(file, ARRAYSIZE(file));
-			_sound->initAudioResourceInfo(kMusicIntro, &resInfoDemo);
-		} else {
-			static const char *const intro[] = { "LOREINTR" };
-			static const char *const finale[] = { "LOREFINL" };
-			SoundResourceInfo_PC resInfoIntro(intro, ARRAYSIZE(intro));
-			SoundResourceInfo_PC resInfoFinale(finale, ARRAYSIZE(finale));
-			_sound->initAudioResourceInfo(kMusicIntro, &resInfoIntro);
-			// In game music file handling is different, thus does not need a file list.
-			_sound->initAudioResourceInfo(kMusicFinale, &resInfoFinale);
-		}
-	} else if (_flags.platform == Common::kPlatformPC98) {
-		static const char *const fileListIntro[] = { 0, "lore84.86", "lore82.86", 0, 0, 0, "lore83.86", "lore81.86" };
-		static const char *const fileListFinale[] = { 0, 0, "lore85.86", "lore86.86", "lore87.86" };
-		SoundResourceInfo_TownsPC98V2 resInfoIntro(fileListIntro, ARRAYSIZE(fileListIntro), 0, 0, 0);
-		SoundResourceInfo_TownsPC98V2 resInfoIngame(0, 0, "lore%02d.86", 0, 0);
-		SoundResourceInfo_TownsPC98V2 resInfoFinale(fileListFinale, ARRAYSIZE(fileListFinale), 0, 0, 0);
-		_sound->initAudioResourceInfo(kMusicIntro, &resInfoIntro);
-		_sound->initAudioResourceInfo(kMusicIngame, &resInfoIngame);
-		_sound->initAudioResourceInfo(kMusicFinale, &resInfoFinale);
-	} else if (_flags.platform == Common::kPlatformFMTowns) {
-		static const char *const fileListIntro[] = { 0, "lore84.twn", "lore82.twn", 0, 0, 0, "lore83.twn", "lore81.twn" };
-		static const char *const fileListFinale[] = { 0, 0, "lore85.twn", "lore86.twn", "lore87.twn" };
-		SoundResourceInfo_TownsPC98V2 resInfoIntro(fileListIntro, ARRAYSIZE(fileListIntro), 0, 0, 0);
-		SoundResourceInfo_TownsPC98V2 resInfoIngame(0, 0, "lore%02d.twn", 0, 0);
-		SoundResourceInfo_TownsPC98V2 resInfoFinale(fileListFinale, ARRAYSIZE(fileListFinale), 0, 0, 0);
-		_sound->initAudioResourceInfo(kMusicIntro, &resInfoIntro);
-		_sound->initAudioResourceInfo(kMusicIngame, &resInfoIngame);
-		_sound->initAudioResourceInfo(kMusicFinale, &resInfoFinale);
-	}
-
-	if (_flags.isDemo && !_flags.isTalkie)
-		return;
+	static const char *const intro[] = { "LOREINTR" };
+	static const char *const finale[] = { "LOREFINL" };
+	SoundResourceInfo_PC resInfoIntro(intro, ARRAYSIZE(intro));
+	SoundResourceInfo_PC resInfoFinale(finale, ARRAYSIZE(finale));
+	_sound->initAudioResourceInfo(kMusicIntro, &resInfoIntro);
+	// In game music file handling is different, thus does not need a file list.
+	_sound->initAudioResourceInfo(kMusicFinale, &resInfoFinale);
 
 	int tempSize;
 	_pakFileList = _staticres->loadStrings(kLoLIngamePakFiles, _pakFileListSize);
@@ -632,35 +601,6 @@ const ScreenDim Screen_LoL::_screenDimTableZH[] = {
 	{ 0x01, 0x02, 0x26, 0x14, 0x00, 0x0F, 0x0E, 0x00 }, // Not checked
 };
 
-const ScreenDim Screen_LoL::_screenDimTable16C[] = {
-	{ 0x00, 0x00, 0x28, 0xC8, 0x33, 0x44, 0x00, 0x00 }, // Taken from Intro
-	{ 0x08, 0x48, 0x18, 0x38, 0x33, 0x44, 0x00, 0x00 },
-	{ 0x0E, 0x00, 0x16, 0x78, 0x33, 0x44, 0x00, 0x00 },
-	{ 0x0B, 0x7B, 0x1C, 0x11, 0x33, 0x11, 0x00, 0x00 },
-	{ 0x0B, 0x7B, 0x1C, 0x2D, 0x33, 0x11, 0x00, 0x00 },
-	{ 0x55, 0x7B, 0xE9, 0x37, 0x33, 0x11, 0x00, 0x00 },
-	{ 0x0B, 0x92, 0x10, 0x2A, 0x33, 0x44, 0x00, 0x00 }, // Main menu box (4 entries)
-	{ 0x04, 0x58, 0x20, 0x3C, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x05, 0x6C, 0x1E, 0x0D, 0x33, 0x44, 0x00, 0x00 },
-	{ 0x07, 0x20, 0x1A, 0x86, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x03, 0x20, 0x22, 0x8C, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x02, 0x48, 0x24, 0x34, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x0E, 0x00, 0x16, 0x78, 0x33, 0x44, 0x00, 0x00 },
-	{ 0x0D, 0xA2, 0x18, 0x0C, 0x33, 0x44, 0x00, 0x00 },
-	{ 0x0F, 0x06, 0x14, 0x6E, 0x44, 0x00, 0x00, 0x00 },
-	{ 0x1A, 0xBE, 0x0A, 0x07, 0x33, 0x44, 0x00, 0x00 },
-	{ 0x07, 0x21, 0x1A, 0x85, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x03, 0x32, 0x22, 0x62, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x0B, 0x8C, 0x10, 0x33, 0x33, 0x44, 0x00, 0x00 }, // Main menu box (5 entries, not used here)
-	{ 0x0B, 0x8C, 0x10, 0x23, 0x33, 0x44, 0x00, 0x00 }, // Main menu box (3 entries)
-
-	{ 0x01, 0x20, 0x26, 0x80, 0xDC, 0xFD, 0x00, 0x00 }, // Credits (TODO: Check this!)
-	{ 0x09, 0x29, 0x08, 0x2C, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x19, 0x29, 0x08, 0x2C, 0x00, 0x00, 0x00, 0x00 },
-	{ 0x01, 0x02, 0x26, 0x14, 0x00, 0x0F, 0x0E, 0x00 },
-};
-
 const int Screen_LoL::_screenDimTableCount = ARRAYSIZE(Screen_LoL::_screenDimTable256C);
 
 const char *const LoLEngine::_languageExt[] = {
@@ -688,17 +628,6 @@ const LoLEngine::CharacterPrev LoLEngine::_charPreviews[] = {
 	{ 0x09A, 0x7F, { 0x06, 0x0A, 0x0F } },
 	{ 0x0D4, 0x7F, { 0x08, 0x06, 0x08 } },
 	{ 0x10F, 0x7F, { 0x0A, 0x0C, 0x0A } }
-};
-
-const uint16 LoLEngine::_charPosXPC98[] = {
-	92, 152, 212, 268
-};
-
-const char *const LoLEngine::_charNamesJapanese[] = {
-	"\x83\x41\x83\x4E\x83\x56\x83\x46\x83\x8B\0",
-	"\x83\x7D\x83\x43\x83\x50\x83\x8B\x00\x00\0",
-	"\x83\x4C\x81\x5B\x83\x89\x83\x93\x00\x00\0",
-	"\x83\x52\x83\x93\x83\x89\x83\x62\x83\x68\0"
 };
 
 const uint8 LoLEngine::_chargenFrameTableTalkie[] = {

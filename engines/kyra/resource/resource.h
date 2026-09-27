@@ -22,7 +22,6 @@
 #ifndef KYRA_RESOURCE_H
 #define KYRA_RESOURCE_H
 
-
 #include "common/scummsys.h"
 #include "common/str.h"
 #include "common/file.h"
@@ -56,8 +55,6 @@ public:
 	void unloadPakFile(const char *name, bool remFromCache = false) { unloadPakFile(Common::String(name), remFromCache); }
 	void unloadPakFile(const Common::Path &name, bool remFromCache = false) { unloadPakFile(name.toString('/'), remFromCache); }
 
-	bool isInPakList(const Common::String &name);
-
 	bool isInCacheList(const Common::String &name);
 
 	bool loadFileList(const Common::Path &filedata);
@@ -80,11 +77,7 @@ public:
 		kForceBE
 	};
 
-	Common::SeekableReadStreamEndian *createEndianAwareReadStream(const Common::Path &file, int endianness = kPlatformEndianness);
-
 	bool loadFileToBuf(const Common::Path &file, void *buf, uint32 maxSize);
-
-	Common::Archive *getCachedArchive(const Common::String &file) const;
 
 protected:
 	typedef Common::HashMap<Common::String, Common::Archive *, Common::CaseSensitiveString_Hash, Common::CaseSensitiveString_EqualTo> ArchiveMap;
@@ -104,7 +97,6 @@ protected:
 	typedef Common::List<Common::SharedPtr<ResArchiveLoader> > LoaderList;
 	LoaderList _loaders;
 
-	const bool _bigEndianPlatForm;
 	KyraEngine_v1 *_vm;
 };
 
@@ -1233,7 +1225,6 @@ enum KyraResources {
 	kMaxResIDs
 };
 
-
 class StaticResource {
 public:
 	static const Common::String staticDataFilename() { return "KYRA.DAT"; }
@@ -1278,7 +1269,6 @@ private:
 	const FileType *getFiletype(int type);
 	const void *getData(int id, int requesttype, int &size);
 
-	bool loadDummy(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadStringTable(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadRawData(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadRawDataBe16(Common::SeekableReadStream &stream, void *&ptr, int &size);
@@ -1289,7 +1279,6 @@ private:
 	bool loadFlyingObjectData(Common::SeekableReadStream &stream, void *&ptr, int &size);
 	bool loadButtonDefs(Common::SeekableReadStream &stream, void *&ptr, int &size);
 
-	void freeDummy(void *&ptr, int &size);
 	void freeRawData(void *&ptr, int &size);
 	void freeStringTable(void *&ptr, int &size);
 	void freeRawDataBe16(void *&ptr, int &size);

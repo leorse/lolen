@@ -1,4 +1,4 @@
 # This file is included from the main "configure" script
 # add_engine [name] [desc] [build-by-default] [subengines] [base games] [deps] [components]
-add_engine kyra "Kyra" yes "lol" "Legend of Kyrandia 1-3" "" "midi fmtowns_pc98_audio"
+add_engine kyra "Kyra" yes "lol" "Lands of Lore" "" "midi"
 add_engine lol "Lands of Lore" yes

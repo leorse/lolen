@@ -19,7 +19,6 @@
  *
  */
 
-
 #include "kyra/engine/lol.h"
 #include "kyra/sound/sound.h"
 #include "kyra/resource/resource.h"
@@ -123,7 +122,6 @@ int LoLEngine::snd_updateCharacterSpeech() {
 		_sound->playVoiceStream(*_speechList.begin(), &_speechHandle);
 		_speechList.pop_front();
 		return 2;
-
 	} else if (_nextSpeechId != -1) {
 		_lastSpeechId = _lastSpeaker = -1;
 		_activeVoiceFileTotalTime = 0;
@@ -187,7 +185,7 @@ void LoLEngine::snd_playSoundEffect(int track, int volume) {
 	if (hasVocFile) {
 		if (_sound->isVoicePresent(_ingameSoundList[vocIndex].c_str()))
 			_sound->voicePlay(_ingameSoundList[vocIndex].c_str(), 0, volume, priority, true);
-	} else if (_flags.platform == Common::kPlatformDOS) {
+	} else {
 		if (_sound->getSfxType() == Sound::kMidiMT32)
 			track = (track < _ingameMT32SoundIndexSize) ? (_ingameMT32SoundIndex[track] - 1) : -1;
 		else if (_sound->getSfxType() == Sound::kMidiGM)
@@ -244,7 +242,7 @@ void LoLEngine::snd_playQueuedEffects() {
 }
 
 void LoLEngine::snd_loadSoundFile(int track) {
-	if (!_sound->musicEnabled() || _flags.platform != Common::kPlatformDOS)
+	if (!_sound->musicEnabled())
 		return;
 	snd_stopMusic();
 	int t = (track - 250) * 3;
@@ -263,13 +261,9 @@ int LoLEngine::snd_playTrack(int track) {
 	_lastMusicTrack = track;
 
 	if (_sound->musicEnabled()) {
-		if (_flags.platform == Common::kPlatformDOS) {
-			snd_loadSoundFile(track);
-			int t = (track - 250) * 3;
-			_sound->playTrack(_musicTrackMap[t + 2]);
-		} else {
-			_sound->playTrack(track - 249);
-		}
+		snd_loadSoundFile(track);
+		int t = (track - 250) * 3;
+		_sound->playTrack(_musicTrackMap[t + 2]);
 	}
 
 	return res;

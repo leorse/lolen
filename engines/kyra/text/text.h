@@ -36,18 +36,13 @@ public:
 
 	int maxSubstringLen() const { return TALK_SUBSTRING_LEN; }
 
-	void setTalkCoords(uint16 y);
 	int getCenterStringX(const Common::String &str, int x1, int x2);
 	int getCharLength(const char *str, int len);
 	int dropCRIntoString(char *str, int offs);
 	virtual char *preprocessString(const char *str);
-	int buildMessageSubstrings(const char *str);
-	int getWidestLineWidth(int linesCount);
 	virtual void calcWidestLineBounds(int &x1, int &x2, int w, int cx);
 	virtual void restoreTalkTextMessageBkgd(int srcPage, int dstPage);
-	void printTalkTextMessage(const char *text, int x, int y, uint8 color, int srcPage, int dstPage);
 	virtual void printText(const Common::String &str, int x, int y, uint8 c0, uint8 c1, uint8 c2);
-	void printCharacterText(const char *text, int8 charNum, int charX);
 
 	uint16 _talkMessageY;
 	uint16 _talkMessageH;
@@ -66,12 +61,10 @@ protected:
 	void setTextColor(uint8 color);
 
 	enum {
-		TALK_SUBSTRING_LEN = 80,
-		TALK_SUBSTRING_NUM = 6
+		TALK_SUBSTRING_LEN = 80
 	};
 
 	char _talkBuffer[1040];
-	char _talkSubstrings[TALK_SUBSTRING_LEN * TALK_SUBSTRING_NUM];
 	TalkCoords _talkCoords;
 	bool _talkMessagePrinted;
 

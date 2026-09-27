@@ -44,10 +44,7 @@ KyraEngine_v1::KyraEngine_v1(OSystem *system, const GameFlags &flags)
 	_configRenderMode = Common::kRenderDefault;
 	_configNullSound = false;
 
-	if (_flags.platform == Common::kPlatformAmiga)
-		_gameSpeed = 50;
-	else
-		_gameSpeed = 60;
+	_gameSpeed = 60;
 	_tickLength = (uint8)(1000.0 / _gameSpeed);
 
 	_trackMap = nullptr;
@@ -88,58 +85,52 @@ Common::Error KyraEngine_v1::init() {
 	// Setup mixer
 	syncSoundSettings();
 
-	if (!_flags.useDigSound) {
-		if (_flags.platform == Common::kPlatformFMTowns || _flags.platform == Common::kPlatformPC98) {
-			_sound = new SoundTownsPC98_v2(this, _mixer);
+	// Users who have specified a default GM device in the launcher will get GM music,
+	// otherwise AdLib. Users who want MT-32 music have to select this individually
+	// (since we assume that most users rather have a GM device than a MT-32 device).
+	// Users who want PC speaker sound always have to select this individually.
+	MidiDriver::DeviceHandle dev = MidiDriver::detectDevice(MDT_PCSPK | MDT_MIDI | MDT_ADLIB | MDT_PREFER_GM);
+	const MusicType musicType = MidiDriver::getMusicType(dev);
+	if (musicType == MT_ADLIB) {
+		_sound = new SoundPC_v1(this, _mixer, Sound::kAdLib);
+	} else {
+		Sound::kType type;
+
+		if (musicType == MT_PCSPK || musicType == MT_NULL)
+			type = Sound::kPCSpkr;
+		else if (musicType == MT_MT32 || ConfMan.getBool("native_mt32"))
+			type = Sound::kMidiMT32;
+		else
+			type = Sound::kMidiGM;
+
+		MidiDriver *driver = nullptr;
+
+		if (musicType == MT_PCSPK) {
+			driver = new MidiDriver_PCSpeaker(_mixer);
 		} else {
-			// Users who have specified a default GM device in the launcher will get GM music,
-			// otherwise AdLib. Users who want MT-32 music have to select this individually
-			// (since we assume that most users rather have a GM device than a MT-32 device).
-			// Users who want PC speaker sound always have to select this individually.
-			MidiDriver::DeviceHandle dev = MidiDriver::detectDevice(MDT_PCSPK | MDT_MIDI | MDT_ADLIB | MDT_PREFER_GM);
-			const MusicType musicType = MidiDriver::getMusicType(dev);
-			if (musicType == MT_ADLIB) {
-				_sound = new SoundPC_v1(this, _mixer, Sound::kAdLib);
-			} else {
-				Sound::kType type;
-
-				if (musicType == MT_PCSPK || musicType == MT_NULL)
-					type = Sound::kPCSpkr;
-				else if (musicType == MT_MT32 || ConfMan.getBool("native_mt32"))
-					type = Sound::kMidiMT32;
-				else
-					type = Sound::kMidiGM;
-
-				MidiDriver *driver = nullptr;
-
-				if (musicType == MT_PCSPK) {
-					driver = new MidiDriver_PCSpeaker(_mixer);
-				} else {
-					driver = MidiDriver::createMidi(dev);
-					if (type == Sound::kMidiMT32)
-						driver->property(MidiDriver::PROP_CHANNEL_MASK, 0x03FE);
-				}
-
-				assert(driver);
-
-				SoundMidiPC *soundMidiPc = new SoundMidiPC(this, _mixer, driver, type);
-				_sound = soundMidiPc;
-				assert(_sound);
-
-				// Unlike some SCUMM games, it's not that the MIDI sounds are
-				// missing. It's just that at least at the time of writing they
-				// are decidedly inferior to the AdLib ones.
-				if (ConfMan.getBool("multi_midi")) {
-					SoundPC_v1 *adlib = new SoundPC_v1(this, _mixer, Sound::kAdLib);
-					assert(adlib);
-
-					_sound = new MixedSoundDriver(this, _mixer, soundMidiPc, adlib);
-				}
-			}
+			driver = MidiDriver::createMidi(dev);
+			if (type == Sound::kMidiMT32)
+				driver->property(MidiDriver::PROP_CHANNEL_MASK, 0x03FE);
 		}
 
+		assert(driver);
+
+		SoundMidiPC *soundMidiPc = new SoundMidiPC(this, _mixer, driver, type);
+		_sound = soundMidiPc;
 		assert(_sound);
+
+		// Unlike some SCUMM games, it's not that the MIDI sounds are
+		// missing. It's just that at least at the time of writing they
+		// are decidedly inferior to the AdLib ones.
+		if (ConfMan.getBool("multi_midi")) {
+			SoundPC_v1 *adlib = new SoundPC_v1(this, _mixer, Sound::kAdLib);
+			assert(adlib);
+
+			_sound = new MixedSoundDriver(this, _mixer, soundMidiPc, adlib);
+		}
 	}
+
+	assert(_sound);
 
 	if (_sound)
 		_sound->updateVolumeSettings();
@@ -196,19 +187,10 @@ Common::Point KyraEngine_v1::getMousePos() {
 	Common::Point mouse = _eventMan->getMousePos();
 	mouse.y -= -_transOffsY;
 
-	if (_flags.useHiRes) {
-		mouse.x >>= 1;
-		mouse.y >>= 1;
-	}
-
 	return mouse;
 }
 
 void KyraEngine_v1::setMousePos(int x, int y) {
-	if (_flags.useHiRes) {
-		x <<= 1;
-		y <<= 1;
-	}
 	_system->warpMouse(x, y);
 
 	// Feed the event manager an artficial mouse move event, since warpMouse() won't generate one.
@@ -280,10 +262,6 @@ int KyraEngine_v1::checkInput(Button *buttonList, bool mainLoop, int eventFlag) 
 		case Common::EVENT_LBUTTONUP: {
 			_mouseX = event.mouse.x;
 			_mouseY = event.mouse.y - _transOffsY;
-			if (_flags.useHiRes) {
-				_mouseX >>= 1;
-				_mouseY >>= 1;
-			}
 			keys = (event.type == Common::EVENT_LBUTTONDOWN ? 199 : (200 | 0x800));
 			breakLoop = true;
 			} break;
@@ -292,10 +270,6 @@ int KyraEngine_v1::checkInput(Button *buttonList, bool mainLoop, int eventFlag) 
 		case Common::EVENT_RBUTTONUP: {
 			_mouseX = event.mouse.x;
 			_mouseY = event.mouse.y - _transOffsY;
-			if (_flags.useHiRes) {
-				_mouseX >>= 1;
-				_mouseY >>= 1;
-			}
 			keys = (event.type == Common::EVENT_RBUTTONDOWN ? 201 : (202 | 0x800));
 			breakLoop = true;
 			} break;
@@ -333,82 +307,80 @@ void KyraEngine_v1::setupKeyMap() {
 	struct KeyCodeMapEntry {
 		Common::KeyCode kcScummVM;
 		int16 kcDOS;
-		int16 kcPC98;
-		int16 kcFMTowns;
 	};
 
 #define UNKNOWN_KEYCODE -1
 #define KC(x) Common::KEYCODE_##x
 	static const KeyCodeMapEntry keys[] = {
-		{ KC(SPACE), 61, 53, 32 },
-		{ KC(RETURN), 43, 29, 13 },
-		{ KC(UP), 96, 68, 30 },
-		{ KC(KP8), 96, 68, 30 },
-		{ KC(RIGHT), 102, 73, 28 },
-		{ KC(KP6), 102, 73, 28 },
-		{ KC(DOWN), 98, 76, 31 },
-		{ KC(KP2), 98, 76, 31 },
-		{ KC(KP5), 97, 72, UNKNOWN_KEYCODE },
-		{ KC(LEFT), 92, 71, 29 },
-		{ KC(KP4), 92, 71, 29 },
-		{ KC(HOME), 91, 67, 127 },
-		{ KC(KP7), 91, 67, 127 },
-		{ KC(PAGEUP), 101, 69, 18 },
-		{ KC(KP9), 101, 69, 18 },
-		{ KC(END), 93, UNKNOWN_KEYCODE, UNKNOWN_KEYCODE },
-		{ KC(KP1), 93, UNKNOWN_KEYCODE, UNKNOWN_KEYCODE },
-		{ KC(PAGEDOWN), 103, UNKNOWN_KEYCODE, UNKNOWN_KEYCODE },
-		{ KC(KP3), 103, UNKNOWN_KEYCODE, UNKNOWN_KEYCODE },
-		{ KC(F1), 112, 99, 93 },
-		{ KC(F2), 113, 100, 94 },
-		{ KC(F3), 114, 101, 95 },
-		{ KC(F4), 115, 102, 96 },
-		{ KC(F5), 116, 103, 97 },
-		{ KC(F6), 117, 104, 98 },
-		{ KC(TAB), 16, 16, 16 },
-		{ KC(a), 31, 31, UNKNOWN_KEYCODE },
-		{ KC(b), 50, 50, 66 },
-		{ KC(c), 48, 48, 67 },
-		{ KC(d), 33, 33, 68 },
-		{ KC(e), 19, 19, UNKNOWN_KEYCODE },
-		{ KC(f), 34, 34, 70 },
-		{ KC(i), 24, 24, 24 },
-		{ KC(k), 38, 38, 75 },
-		{ KC(m), 52, 52, 77 },
-		{ KC(n), 51, 51, UNKNOWN_KEYCODE },
-		{ KC(o), 25, 25, 79 },
-		{ KC(p), 26, 26, 80 },
-		{ KC(r), 20, 20, 82 },
-		{ KC(s), 32, 32, UNKNOWN_KEYCODE },
-		{ KC(w), 18, 18, UNKNOWN_KEYCODE },
-		{ KC(y), 22, 22, UNKNOWN_KEYCODE },
-		{ KC(z), 46, 46, UNKNOWN_KEYCODE },
-		{ KC(0), UNKNOWN_KEYCODE, UNKNOWN_KEYCODE, 48 },
-		{ KC(1), 2, UNKNOWN_KEYCODE, 49 },
-		{ KC(2), 3, UNKNOWN_KEYCODE, 50 },
-		{ KC(3), 4, UNKNOWN_KEYCODE, 51 },
-		{ KC(4), 5, UNKNOWN_KEYCODE, 52 },
-		{ KC(5), 6, UNKNOWN_KEYCODE, 53 },
-		{ KC(6), 7, UNKNOWN_KEYCODE, 54 },
-		{ KC(7), 8, UNKNOWN_KEYCODE, 55 },
-		{ KC(SLASH), 55, 55, 47 },
-		{ KC(ESCAPE), 110, 1, 27 },
-		{ KC(MINUS), 12, UNKNOWN_KEYCODE, 45 },
-		{ KC(KP_MINUS), 105, UNKNOWN_KEYCODE, 45 },
-		{ KC(PLUS), 13, UNKNOWN_KEYCODE, 43 },
-		{ KC(KP_PLUS), 106, UNKNOWN_KEYCODE, 43 },
+		{ KC(SPACE), 61 },
+		{ KC(RETURN), 43 },
+		{ KC(UP), 96 },
+		{ KC(KP8), 96 },
+		{ KC(RIGHT), 102 },
+		{ KC(KP6), 102 },
+		{ KC(DOWN), 98 },
+		{ KC(KP2), 98 },
+		{ KC(KP5), 97 },
+		{ KC(LEFT), 92 },
+		{ KC(KP4), 92 },
+		{ KC(HOME), 91 },
+		{ KC(KP7), 91 },
+		{ KC(PAGEUP), 101 },
+		{ KC(KP9), 101 },
+		{ KC(END), 93 },
+		{ KC(KP1), 93 },
+		{ KC(PAGEDOWN), 103 },
+		{ KC(KP3), 103 },
+		{ KC(F1), 112 },
+		{ KC(F2), 113 },
+		{ KC(F3), 114 },
+		{ KC(F4), 115 },
+		{ KC(F5), 116 },
+		{ KC(F6), 117 },
+		{ KC(TAB), 16 },
+		{ KC(a), 31 },
+		{ KC(b), 50 },
+		{ KC(c), 48 },
+		{ KC(d), 33 },
+		{ KC(e), 19 },
+		{ KC(f), 34 },
+		{ KC(i), 24 },
+		{ KC(k), 38 },
+		{ KC(m), 52 },
+		{ KC(n), 51 },
+		{ KC(o), 25 },
+		{ KC(p), 26 },
+		{ KC(r), 20 },
+		{ KC(s), 32 },
+		{ KC(w), 18 },
+		{ KC(y), 22 },
+		{ KC(z), 46 },
+		{ KC(0), UNKNOWN_KEYCODE },
+		{ KC(1), 2 },
+		{ KC(2), 3 },
+		{ KC(3), 4 },
+		{ KC(4), 5 },
+		{ KC(5), 6 },
+		{ KC(6), 7 },
+		{ KC(7), 8 },
+		{ KC(SLASH), 55 },
+		{ KC(ESCAPE), 110 },
+		{ KC(MINUS), 12 },
+		{ KC(KP_MINUS), 105 },
+		{ KC(PLUS), 13 },
+		{ KC(KP_PLUS), 106 },
 
 		// Multiple mappings for the keys to the right of the 'M' key,
 		// since these are different for QWERTZ, QWERTY and AZERTY keyboards.
 		// QWERTZ
-		{ KC(COMMA), 53, UNKNOWN_KEYCODE, 60 },
-		{ KC(PERIOD), 54, UNKNOWN_KEYCODE, 62 },
+		{ KC(COMMA), 53 },
+		{ KC(PERIOD), 54 },
 		// AZERTY
-		{ KC(SEMICOLON), 53, UNKNOWN_KEYCODE, 60 },
-		{ KC(COLON), 54, UNKNOWN_KEYCODE, 62 },
+		{ KC(SEMICOLON), 53 },
+		{ KC(COLON), 54 },
 		// QWERTY
-		{ KC(LESS), 53, UNKNOWN_KEYCODE, 60 },
-		{ KC(GREATER), 54, UNKNOWN_KEYCODE, 62 }
+		{ KC(LESS), 53 },
+		{ KC(GREATER), 54 }
 	};
 #undef KC
 #undef UNKNOWN_KEYCODE
@@ -423,7 +395,7 @@ void KyraEngine_v1::setupKeyMap() {
 		return;
 
 	for (int i = 0; i < ARRAYSIZE(keys); i++)
-		_keyMap[keys[i].kcScummVM] = (_flags.platform == Common::kPlatformPC98) ? keys[i].kcPC98 : ((_flags.platform == Common::kPlatformFMTowns) ? keys[i].kcFMTowns : keys[i].kcDOS);
+		_keyMap[keys[i].kcScummVM] = keys[i].kcDOS;
 }
 
 void KyraEngine_v1::updateInput() {
@@ -473,11 +445,6 @@ void KyraEngine_v1::updateInput() {
 void KyraEngine_v1::removeInputTop() {
 	if (!_eventList.empty())
 		_eventList.erase(_eventList.begin());
-}
-
-void KyraEngine_v1::transposeScreenOutputY(int yAdd) {
-	_transOffsY = yAdd;
-	screen()->transposeScreenOutputY(yAdd);
 }
 
 bool KyraEngine_v1::skipFlag() const {
@@ -539,10 +506,6 @@ void KyraEngine_v1::delayWithTicks(int ticks) {
 }
 
 void KyraEngine_v1::registerDefaultSettings() {
-	if (_flags.platform == Common::kPlatformFMTowns)
-		ConfMan.registerDefault("cdaudio", true);
-	else if (_flags.platform == Common::kPlatformMacintosh)
-		ConfMan.registerDefault("hqmusic", true);
 	if (_flags.fanLang != Common::UNK_LANG) {
 		// HACK/WORKAROUND: Since we can't use registerDefault here to overwrite
 		// the global subtitles settings, we're using this hack to enable subtitles
@@ -558,12 +521,7 @@ void KyraEngine_v1::readSettings() {
 	_configMusic = 0;
 
 	if (!ConfMan.getBool("music_mute")) {
-		if (_flags.platform == Common::kPlatformFMTowns)
-			_configMusic = ConfMan.getBool("cdaudio") ? 2 : 1;
-		else if (_flags.platform == Common::kPlatformMacintosh)
-			_configMusic = ConfMan.getBool("hqmusic") ? 1 : 2;
-		else
-			_configMusic = 1;
+		_configMusic = 1;
 	}
 	_configSounds = ConfMan.getBool("sfx_mute") ? 0 : 1;
 
@@ -590,10 +548,6 @@ void KyraEngine_v1::writeSettings() {
 
 	ConfMan.setInt("walkspeed", _configWalkspeed);
 	ConfMan.setBool("music_mute", _configMusic == 0);
-	if (_flags.platform == Common::kPlatformFMTowns)
-		ConfMan.setBool("cdaudio", _configMusic == 2);
-	else if (_flags.platform == Common::kPlatformMacintosh)
-		ConfMan.setBool("hqmusic", _configMusic == 1);
 	ConfMan.setBool("sfx_mute", _configSounds == 0);
 
 	switch (_configVoice) {

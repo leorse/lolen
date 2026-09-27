@@ -19,7 +19,6 @@
  *
  */
 
-
 #include "kyra/engine/kyra_rpg.h"
 #include "kyra/resource/resource.h"
 #include "kyra/engine/timer.h"
@@ -339,39 +338,9 @@ uint16 KyraRpgEngine::calcNewBlockPosition(uint16 curBlock, uint16 direction) {
 	return (curBlock + blockPosTable[direction]) & 0x3FF;
 }
 
-void KyraRpgEngine::setVcnFormat(int outputBPP, Common::RenderMode renderMode) {
-	_vcnBpp = outputBPP;
-
-	delete[] _sceneWindowBuffer;
-	_sceneWindowBuffer = new uint8[22 * 15 * 8 * 8 * _vcnBpp]();
-
-	delete _vcnDrawLine;
-
-	if (_vcnBpp == 4)
-		_vcnDrawLine = new VcnLineDrawingMethods(new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_hiCol<uint32>), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_hiCol<uint32>),
-			new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_trans_hiCol<uint32>), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_trans_hiCol<uint32>));
-	else if (_vcnBpp == 2)
-		_vcnDrawLine = new VcnLineDrawingMethods(new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_hiCol<uint16>), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_hiCol<uint16>),
-			new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_trans_hiCol<uint16>), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_trans_hiCol<uint16>));
-	else if (_flags.platform == Common::kPlatformAmiga)
-		_vcnDrawLine = new VcnLineDrawingMethods(new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_planar), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_planar),
-			new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_trans_planar), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_trans_planar));
-	else if (renderMode == Common::kRenderCGA)
-		_vcnDrawLine = new VcnLineDrawingMethods(new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_4bit), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_4bit),
-			new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_trans_4bit<true>), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_trans_4bit<true>));
-	else
-		_vcnDrawLine = new VcnLineDrawingMethods(new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_4bit), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_4bit),
-			new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_fw_trans_4bit<false>), new VcnDrawProc(this, &KyraRpgEngine::vcnDraw_bw_trans_4bit<false>));
-}
-
 void KyraRpgEngine::drawVcnBlocks() {
 	uint8 *d = _sceneWindowBuffer;
 	uint16 *bdb = _blockDrawingBuffer;
-
-	if (_vcnBpp > 1) {
-		_vcnHiColorPalette = screen()->getHiColorPalette();
-		assert(_vcnHiColorPalette);
-	}
 
 	for (int y = 0; y < 15; y++) {
 		for (int x = 0; x < 22; x++) {
@@ -395,7 +364,7 @@ void KyraRpgEngine::drawVcnBlocks() {
 
 			const uint8 *src = 0;
 			if (vcnOffset) {
-				src = &_vcnBlocks[vcnOffset * (_vcnSrcBitsPerPixel << 3)];
+				src = &_vcnBlocks[vcnOffset * 32];
 				_wllVcnOffset2 = _wllVcnOffset;
 			} else {
 				// floor/ceiling blocks
@@ -405,22 +374,22 @@ void KyraRpgEngine::drawVcnBlocks() {
 					vcnOffset &= 0x3FFF;
 				}
 
-				src = (_vcfBlocks ? _vcfBlocks : _vcnBlocks) + (vcnOffset * (_vcnSrcBitsPerPixel << 3));
+				src = (_vcfBlocks ? _vcfBlocks : _vcnBlocks) + (vcnOffset * 32);
 			}
 
 			_vcnShiftVal = _vcnShift ? _vcnShift[vcnOffset] : _blockBrightness;
 
 			for (int blockY = 0; blockY < 8; blockY++) {
 				if (horizontalFlip)
-					(*_vcnDrawLine->backwards)(d, src);
+					vcnDraw_bw(d, src);
 				else
-					(*_vcnDrawLine->forward)(d, src);
-				d += 168 * _vcnBpp;
+					vcnDraw_fw(d, src);
+				d += 168;
 			}
-			d -= 1400 * _vcnBpp;
+			d -= 1400;
 
 			if (vcnExtraOffsetWll) {
-				d -= (8 * _vcnBpp);
+				d -= 8;
 				horizontalFlip = false;
 
 				if (vcnExtraOffsetWll & 0x4000) {
@@ -429,26 +398,25 @@ void KyraRpgEngine::drawVcnBlocks() {
 				}
 
 				_vcnShiftVal = _vcnShift ? _vcnShift[vcnExtraOffsetWll] : _blockBrightness;
-				src = &_vcnBlocks[vcnExtraOffsetWll * (_vcnSrcBitsPerPixel << 3)];
-				_vcnMaskTbl = _vcnTransitionMask ? &_vcnTransitionMask[vcnExtraOffsetWll * (_vcnSrcBitsPerPixel << 3)] : 0;
+				src = &_vcnBlocks[vcnExtraOffsetWll * 32];
 
 				for (int blockY = 0; blockY < 8; blockY++) {
 					if (horizontalFlip)
-						(*_vcnDrawLine->backwards_trans)(d, src);
+						vcnDraw_bw_trans(d, src);
 					else
-						(*_vcnDrawLine->forward_trans)(d, src);
-					d += 168 * _vcnBpp;
+						vcnDraw_fw_trans(d, src);
+					d += 168;
 				}
-				d -= 1400 * _vcnBpp;
+				d -= 1400;
 			}
 		}
-		d += 1232 * _vcnBpp;
+		d += 1232;
 	}
 
 	screen()->copyBlockToPage(_sceneDrawPage1, _sceneXoffset, 0, 176, 120, _sceneWindowBuffer);
 }
 
-void KyraRpgEngine::vcnDraw_fw_4bit(uint8 *&dst, const uint8 *&src) {
+void KyraRpgEngine::vcnDraw_fw(uint8 *&dst, const uint8 *&src) {
 	for (int blockX = 0; blockX < 4; blockX++) {
 		uint8 bl = *src++;
 		*dst++ = _vcnColTable[((bl >> 4) + _wllVcnOffset2) | _vcnShiftVal];
@@ -456,7 +424,7 @@ void KyraRpgEngine::vcnDraw_fw_4bit(uint8 *&dst, const uint8 *&src) {
 	}
 }
 
-void KyraRpgEngine::vcnDraw_bw_4bit(uint8 *&dst, const uint8 *&src) {
+void KyraRpgEngine::vcnDraw_bw(uint8 *&dst, const uint8 *&src) {
 	src += 3;
 	for (int blockX = 0; blockX < 4; blockX++) {
 		uint8 bl = *src--;
@@ -466,154 +434,38 @@ void KyraRpgEngine::vcnDraw_bw_4bit(uint8 *&dst, const uint8 *&src) {
 	src += 5;
 }
 
-template<bool cga> void KyraRpgEngine::vcnDraw_fw_trans_4bit(uint8 *&dst, const uint8 *&src) {
+void KyraRpgEngine::vcnDraw_fw_trans(uint8 *&dst, const uint8 *&src) {
 	for (int blockX = 0; blockX < 4; blockX++) {
 		uint8 bl = *src++;
-		uint8 mask = cga ? *_vcnMaskTbl++ : 0;
 		uint8 h = _vcnColTable[((bl >> 4) + _wllVcnRmdOffset) | _vcnShiftVal];
 		uint8 l = _vcnColTable[((bl & 0x0F) + _wllVcnRmdOffset) | _vcnShiftVal];
 
-		if (cga)
-			*dst = (*dst & (mask >> 4)) | h;
-		else if (h)
+		if (h)
 			*dst = h;
 		dst++;
 
-		if (cga)
-			*dst = (*dst & (mask & 0x0F)) | l;
-		else if (l)
+		if (l)
 			*dst = l;
 		dst++;
 	}
 }
 
-template<bool cga> void KyraRpgEngine::vcnDraw_bw_trans_4bit(uint8 *&dst, const uint8 *&src) {
+void KyraRpgEngine::vcnDraw_bw_trans(uint8 *&dst, const uint8 *&src) {
 	src += 3;
-	if (cga)
-		_vcnMaskTbl += 3;
 	for (int blockX = 0; blockX < 4; blockX++) {
 		uint8 bl = *src--;
-		uint8 mask = cga ? *_vcnMaskTbl-- : 0;
 		uint8 h = _vcnColTable[((bl & 0x0F) + _wllVcnRmdOffset) | _vcnShiftVal];
 		uint8 l = _vcnColTable[((bl >> 4) + _wllVcnRmdOffset) | _vcnShiftVal];
 
-		if (cga)
-			*dst = (*dst & (mask & 0x0F)) | h;
-		else if (h)
+		if (h)
 			*dst = h;
 		dst++;
 
-		if (cga)
-			*dst = (*dst & (mask >> 4)) | l;
-		else if (l)
+		if (l)
 			*dst = l;
 		dst++;
 	}
 	src += 5;
-	if (cga)
-		_vcnMaskTbl += 5;
-}
-
-template void KyraRpgEngine::vcnDraw_fw_trans_4bit<true>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_bw_trans_4bit<true>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_fw_trans_4bit<false>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_bw_trans_4bit<false>(uint8 *&dst, const uint8 *&src);
-
-template<typename T> void KyraRpgEngine::vcnDraw_fw_hiCol(uint8 *&dst, const uint8 *&src) {
-	const T *hiColorPal = reinterpret_cast<const T*>(_vcnHiColorPalette);
-	T *d = reinterpret_cast<T*>(dst);
-	for (int blockX = 0; blockX < _vcnSrcBitsPerPixel; blockX++)
-		*d++ = hiColorPal[*src++];
-	dst = reinterpret_cast<uint8*>(d);
-}
-
-template<typename T> void KyraRpgEngine::vcnDraw_bw_hiCol(uint8 *&dst, const uint8 *&src) {
-	src += 7;
-	const T *hiColorPal = reinterpret_cast<const T*>(_vcnHiColorPalette);
-	T *d = reinterpret_cast<T*>(dst);
-	for (int blockX = 0; blockX < _vcnSrcBitsPerPixel; blockX++)
-		*d++ = hiColorPal[*src--];
-	src += 9;
-	dst = reinterpret_cast<uint8*>(d);
-}
-
-template<typename T> void KyraRpgEngine::vcnDraw_fw_trans_hiCol(uint8 *&dst, const uint8 *&src) {
-	const T *hiColorPal = reinterpret_cast<const T*>(_vcnHiColorPalette);
-	T *d = reinterpret_cast<T*>(dst);
-	for (int blockX = 0; blockX < _vcnSrcBitsPerPixel; blockX++) {
-		uint8 bl = *src++;
-		if (bl)
-			*d = hiColorPal[bl];
-		d++;
-	}
-	dst = reinterpret_cast<uint8*>(d);
-}
-
-template<typename T> void KyraRpgEngine::vcnDraw_bw_trans_hiCol(uint8 *&dst, const uint8 *&src) {
-	src += 7;
-	const T *hiColorPal = reinterpret_cast<const T*>(_vcnHiColorPalette);
-	T *d = reinterpret_cast<T*>(dst);
-	for (int blockX = 0; blockX < _vcnSrcBitsPerPixel; blockX++) {
-		uint8 bl = *src--;
-		if (bl)
-			*d = hiColorPal[bl];
-		d++;
-	}
-	src += 9;
-	dst = reinterpret_cast<uint8*>(d);
-}
-
-template void KyraRpgEngine::vcnDraw_fw_hiCol<uint16>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_fw_hiCol<uint32>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_bw_hiCol<uint16>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_bw_hiCol<uint32>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_fw_trans_hiCol<uint16>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_fw_trans_hiCol<uint32>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_bw_trans_hiCol<uint16>(uint8 *&dst, const uint8 *&src);
-template void KyraRpgEngine::vcnDraw_bw_trans_hiCol<uint32>(uint8 *&dst, const uint8 *&src);
-
-void KyraRpgEngine::vcnDraw_fw_planar(uint8 *&dst, const uint8 *&src) {
-	for (int blockX = 0; blockX < 8; blockX++) {
-		uint8 col = 0;
-		for (int i = 0; i < _vcnSrcBitsPerPixel; ++i)
-			col |= ((src[i] >> (7 - blockX)) & 1) << i;
-		*dst++ = col;
-	}
-	src += _vcnSrcBitsPerPixel;
-}
-
-void KyraRpgEngine::vcnDraw_bw_planar(uint8 *&dst, const uint8 *&src) {
-	for (int blockX = 7; blockX >= 0; blockX--) {
-		uint8 col = 0;
-		for (int i = 0; i < _vcnSrcBitsPerPixel; ++i)
-			col |= ((src[i] >> (7 - blockX)) & 1) << i;
-		*dst++ = col;
-	}
-	src += _vcnSrcBitsPerPixel;
-}
-
-void KyraRpgEngine::vcnDraw_fw_trans_planar(uint8 *&dst, const uint8 *&src) {
-	for (int blockX = 0; blockX < 8; blockX++) {
-		uint8 col = 0;
-		for (int i = 0; i < _vcnSrcBitsPerPixel; ++i)
-			col |= ((src[i] >> (7 - blockX)) & 1) << i;
-		if (col)
-			*dst = col;
-		dst++;
-	}
-	src += _vcnSrcBitsPerPixel;
-}
-
-void KyraRpgEngine::vcnDraw_bw_trans_planar(uint8 *&dst, const uint8 *&src) {
-	for (int blockX = 7; blockX >= 0; blockX--) {
-		uint8 col = 0;
-		for (int i = 0; i < _vcnSrcBitsPerPixel; ++i)
-			col |= ((src[i] >> (7 - blockX)) & 1) << i;
-		if (col)
-			*dst = col;
-		dst++;
-	}
-	src += _vcnSrcBitsPerPixel;
 }
 
 int KyraRpgEngine::clickedWallShape(uint16 block, uint16 direction) {
@@ -718,14 +570,13 @@ void KyraRpgEngine::openCloseDoor(int block, int openClose) {
 			_levelBlockProperties[block].walls[c] += openClose;
 			_levelBlockProperties[block].walls[c ^ 2] += openClose;
 
-			int snd = (openClose == -1) ? 4 : (isSpecialDoor(block) ? 126 : 3);
+			int snd = (openClose == -1) ? 4 : 3;
 			snd_processEnvironmentalSoundEffect(snd + 28, _currentBlock);
 			if (!checkSceneUpdateNeed(block))
 				snd_updateEnvironmentalSfx(0);
 		}
 
 		enableTimer(0);
-
 	} else {
 		while (!(flg & _wllWallFlags[v]))
 			v += openClose;
@@ -749,20 +600,6 @@ void KyraRpgEngine::completeDoorOperations() {
 
 		_openDoorState[i].block = 0;
 	}
-}
-
-bool KyraRpgEngine::isSpecialDoor(int block) {
-	if (_flags.platform != Common::kPlatformSegaCD || _currentLevel != 2)
-		return false;
-
-	static const uint16 specialBlocks[4] = { 0x122, 0x275, 0x3C8, 0x1E7 };
-
-	for (int i = 0; i < 4; ++i) {
-		if (block == specialBlocks[i])
-			return true;
-	}
-
-	return false;
 }
 
 } // End of namespace Kyra

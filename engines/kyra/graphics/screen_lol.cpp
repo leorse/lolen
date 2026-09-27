@@ -19,7 +19,6 @@
  *
  */
 
-
 #include "kyra/graphics/screen_lol.h"
 #include "kyra/engine/lol.h"
 
@@ -29,7 +28,7 @@
 
 namespace Kyra {
 
-Screen_LoL::Screen_LoL(LoLEngine *vm, OSystem *system) : Screen_v2(vm, system,  vm->gameFlags().use16ColorMode ? _screenDimTable16C : vm->gameFlags().lang == Common::Language::ZH_TWN ? _screenDimTableZH : _screenDimTable256C, _screenDimTableCount) {
+Screen_LoL::Screen_LoL(LoLEngine *vm, OSystem *system) : Screen_v2(vm, system,  vm->gameFlags().lang == Common::Language::ZH_TWN ? _screenDimTableZH: _screenDimTable256C, _screenDimTableCount) {
 	_paletteOverlay1 = new uint8[0x100]();
 	_paletteOverlay2 = new uint8[0x100]();
 	_grayOverlay = new uint8[0x100]();
@@ -65,21 +64,14 @@ void Screen_LoL::fprintString(const char *format, int x, int y, uint8 col1, uint
 	if (flags & 2)
 		x -= getTextWidth(string);
 
-	if (_use16ColorMode) {
-		if (flags & 12) {
-			printText(string, x - 1, y, 0x44, col2);
-			printText(string, x, y + 1, 0x44, col2);
-		}
-	} else {
-		if (flags & 4) {
-			printText(string, x - 1, y, 1, col2);
-			printText(string, x, y + 1, 1, col2);
-		}
+	if (flags & 4) {
+		printText(string, x - 1, y, 1, col2);
+		printText(string, x, y + 1, 1, col2);
+	}
 
-		if (flags & 8) {
-			printText(string, x - 1, y, 227, col2);
-			printText(string, x, y + 1, 227, col2);
-		}
+	if (flags & 8) {
+		printText(string, x - 1, y, 227, col2);
+		printText(string, x, y + 1, 227, col2);
 	}
 
 	printText(string, x, y, col1, col2);
@@ -117,9 +109,6 @@ void Screen_LoL::drawShadedBox(int x1, int y1, int x2, int y2, int color1, int c
 	drawClippedLine(x2 - 1, y1 + 1, x2 - 1, y2 - 1, color2);
 	drawClippedLine(x1 + 1, y2 - 1, x2, y2 - 1, color2);
 	drawClippedLine(x1, y2, x2, y2, color2);
-
-	if (_use16ColorMode && color1 > color2)
-		drawBox(x1, y1, x2, y2, 0x44);
 
 	showMouse();
 }
@@ -176,7 +165,6 @@ void Screen_LoL::createTransparencyTablesIntern(const uint8 *ovl, int a, const u
 
 				o[ii] = findLeastDifferentColor(tcol, screenPal, 0, 255);
 			}
-
 		} else {
 			memset(&outTable2[i << 8], 0, 256);
 		}
@@ -245,18 +233,13 @@ void Screen_LoL::fadeClearSceneWindow(int delay) {
 	if (_fadeFlag == 1)
 		return;
 
-	if (_use16ColorMode) {
-		fadeToBlack(delay);
-		fillRect(112, 0, 288, 120, 0x44);
-	} else {
-		Palette tpal(getPalette(0).getNumColors());
-		tpal.copy(getPalette(0), 128);
+	Palette tpal(getPalette(0).getNumColors());
+	tpal.copy(getPalette(0), 128);
 
-		loadSpecialColors(tpal);
-		fadePalette(tpal, delay);
+	loadSpecialColors(tpal);
+	fadePalette(tpal, delay);
 
-		fillRect(112, 0, 288, 120, 0);
-	}
+	fillRect(112, 0, 288, 120, 0);
 
 	_fadeFlag = 1;
 }
@@ -585,7 +568,6 @@ void Screen_LoL::copyRegionSpecial(int page1, int w1, int h1, int x1, int y1, in
 
 		if (mode == 0) {
 			memcpy(d, s, ibw_2);
-
 		} else if (mode == 1) {
 			if (!(i & 1)) {
 				s++;
@@ -597,7 +579,6 @@ void Screen_LoL::copyRegionSpecial(int page1, int w1, int h1, int x1, int y1, in
 				d += 2;
 				s += 2;
 			}
-
 		} else if (mode == 2) {
 			for (int ii = 0; ii < ibw_2; ii++) {
 				uint8 cmd = *s++;
@@ -606,7 +587,6 @@ void Screen_LoL::copyRegionSpecial(int page1, int w1, int h1, int x1, int y1, in
 					cmd = table2[(offs << 8) | *d];
 				*d++ = cmd;
 			}
-
 		} else if (mode == 3) {
 			s = s - iu5_2 + ibw_1;
 			s = s - iu5_2 - 1;
@@ -739,9 +719,6 @@ void Screen_LoL::fadeToPalette1(int delay) {
 }
 
 void Screen_LoL::loadSpecialColors(Palette &dst) {
-	if (_use16ColorMode)
-		return;
-
 	dst.copy(*_screenPalette, 192, 4);
 }
 
@@ -759,9 +736,6 @@ void Screen_LoL::copyColor(int dstColorIndex, int srcColorIndex) {
 }
 
 bool Screen_LoL::fadeColor(int dstColorIndex, int srcColorIndex, uint32 elapsedTicks, uint32 totalTicks) {
-	if (_use16ColorMode)
-		return false;
-
 	const uint8 *dst = _screenPalette->getData() + 3 * dstColorIndex;
 	const uint8 *src = _screenPalette->getData() + 3 * srcColorIndex;
 	uint8 *p = getPalette(1).getData() + 3 * dstColorIndex;
@@ -804,7 +778,7 @@ bool Screen_LoL::fadeColor(int dstColorIndex, int srcColorIndex, uint32 elapsedT
 }
 
 Palette **Screen_LoL::generateFadeTable(Palette **dst, Palette *src1, Palette *src2, int numTabs) {
-	int len = _use16ColorMode ? 48 : 768;
+	int len = 768;
 	if (!src1)
 		src1 = _screenPalette;
 
@@ -842,45 +816,6 @@ Palette **Screen_LoL::generateFadeTable(Palette **dst, Palette *src1, Palette *s
 
 uint8 Screen_LoL::getShapePaletteSize(const uint8 *shp) {
 	return shp[10];
-}
-
-void Screen_LoL::mergeOverlay(int x, int y, int w, int h) {
-	// For now we convert to 16 colors on overlay merging. If that gives
-	// any problems, like Screen functionallity not prepared for the
-	// format PC98 16 color uses, we'll need to think of a better way.
-	//
-	// We must do this before merging the overlay, else the font colors
-	// will be wrong.
-	if (_use16ColorMode)
-		convertPC98Gfx(_sjisOverlayPtrs[0] + y * 640 + x, w, h, 640);
-
-	Screen_v2::mergeOverlay(x, y, w, h);
-}
-
-void Screen_LoL::convertPC98Gfx(uint8 *data, int w, int h, int pitch) {
-	while (h--) {
-		for (int i = 0; i < w; ++i) {
-			*data = (*data >> 4) & (*data & 0x0F);
-			++data;
-		}
-
-		data += pitch - w;
-	}
-}
-
-void Screen_LoL::postProcessCursor(uint8 *data, int w, int h, int pitch) {
-	if (!_use16ColorMode)
-		return;
-
-	while (h--) {
-		for (int i = 0; i < w; ++i) {
-			if (*data != _cursorColorKey)
-				*data = (*data >> 4) & (*data & 0x0F);
-			++data;
-		}
-
-		data += pitch - w;
-	}
 }
 
 void ChineseOneByteFontLoL::processColorMap() {

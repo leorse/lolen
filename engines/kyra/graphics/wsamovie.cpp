@@ -50,10 +50,6 @@ int WSAMovie_v1::open(const char *filename, int offscreenDecode, Palette *palBuf
 	_deltaBufferSize = READ_LE_UINT16(wsaData); wsaData += 2;
 	_offscreenBuffer = nullptr;
 	_flags = 0;
-	if (_vm->gameFlags().useAltShapeHeader) {
-		flags = READ_LE_UINT16(wsaData);
-		wsaData += 2;
-	}
 
 	uint32 offsPal = 0;
 	if (flags & 1) {
@@ -71,8 +67,7 @@ int WSAMovie_v1::open(const char *filename, int offscreenDecode, Palette *palBuf
 
 	if (_numFrames & 0x8000) {
 		// This is used in the Amiga version.
-		if (_vm->gameFlags().platform != Common::kPlatformAmiga)
-			warning("Unhandled wsa flags 0x8000");
+		warning("Unhandled wsa flags 0x8000");
 		_flags |= WF_FLIPPED;
 		_numFrames &= 0x7FFF;
 	}
@@ -219,143 +214,6 @@ void WSAMovie_v1::processFrame(int frameNum, uint8 *dst) {
 
 #pragma mark -
 
-WSAMovieAmiga::WSAMovieAmiga(KyraEngine_v1 *vm) : WSAMovie_v1(vm), _buffer(nullptr) {}
-
-int WSAMovieAmiga::open(const char *filename, int offscreenDecode, Palette *palBuf) {
-	int res = WSAMovie_v1::open(filename, offscreenDecode, palBuf);
-
-	if (!res)
-		return 0;
-
-	_buffer = new uint8[_width * _height];
-	assert(_buffer);
-	return res;
-}
-
-void WSAMovieAmiga::close() {
-	if (_opened) {
-		delete[] _buffer;
-		_buffer = nullptr;
-	}
-	WSAMovie_v1::close();
-}
-
-void WSAMovieAmiga::displayFrame(int frameNum, int pageNum, int x, int y, uint16 flags, const uint8 *table1, const uint8 *table2) {
-	if (frameNum >= _numFrames || frameNum < 0 || !_opened)
-		return;
-
-	_x = x;
-	_y = y;
-	_drawPage = pageNum;
-
-	uint8 *dst;
-	dst = _buffer;
-	memset(_buffer, 0, _width * _height);
-
-	if (_currentFrame == _numFrames) {
-		if (!(_flags & WF_NO_FIRST_FRAME)) {
-			Screen::decodeFrameDelta(dst, _deltaBuffer, true);
-			Screen::convertAmigaGfx(dst, _width, _height, 5, (_flags & WF_FLIPPED) != 0);
-
-			if (_flags & WF_OFFSCREEN_DECODE) {
-				dst = _offscreenBuffer;
-				const uint8 *src = _buffer;
-				int size = _width * _height;
-
-				for (int i = 0; i < size; ++i)
-					*dst++ ^= *src++;
-
-				dst = _buffer;
-			} else {
-				_screen->copyBlockToPage(_drawPage, _x, _y, _width, _height, _buffer);
-			}
-		}
-		_currentFrame = 0;
-	}
-
-	// try to reduce the number of needed frame operations
-	int diffCount = ABS(_currentFrame - frameNum);
-	int frameStep = 1;
-	int frameCount;
-	if (_currentFrame < frameNum) {
-		frameCount = _numFrames - frameNum + _currentFrame;
-		if (diffCount > frameCount && !(_flags & WF_NO_LAST_FRAME))
-			frameStep = -1;
-		else
-			frameCount = diffCount;
-	} else {
-		frameCount = _numFrames - _currentFrame + frameNum;
-		if (frameCount >= diffCount || (_flags & WF_NO_LAST_FRAME)) {
-			frameStep = -1;
-			frameCount = diffCount;
-		}
-	}
-
-	// process
-	if (frameStep > 0) {
-		uint16 cf = _currentFrame;
-		while (frameCount--) {
-			cf += frameStep;
-			processFrame(cf, dst);
-			if (cf == _numFrames)
-				cf = 0;
-		}
-	} else {
-		uint16 cf = _currentFrame;
-		while (frameCount--) {
-			if (cf == 0)
-				cf = _numFrames;
-			processFrame(cf, dst);
-			cf += frameStep;
-		}
-	}
-
-	// display
-	_currentFrame = frameNum;
-	if (_flags & WF_OFFSCREEN_DECODE) {
-		int pageBackUp = _screen->setCurPage(_drawPage);
-
-		int plotFunc = (flags & 0xFF00) >> 12;
-		int unk1 = flags & 0xFF;
-
-		_screen->copyWsaRect(_x, _y, _width, _height, 0, plotFunc, _offscreenBuffer, unk1, table1, table2);
-
-		_screen->_curPage = pageBackUp;
-	}
-}
-
-void WSAMovieAmiga::processFrame(int frameNum, uint8 *dst) {
-	if (!_opened)
-		return;
-	assert(frameNum <= _numFrames);
-
-	memset(dst, 0, _width * _height);
-
-	const uint8 *src = _frameData + _frameOffsTable[frameNum];
-	Screen::decodeFrame4(src, _deltaBuffer, _deltaBufferSize);
-	Screen::decodeFrameDelta(dst, _deltaBuffer, true);
-	Screen::convertAmigaGfx(dst, _width, _height, 5, (_flags & WF_FLIPPED) != 0);
-
-	src = dst;
-	dst = nullptr;
-	int dstPitch = 0;
-	if (_flags & WF_OFFSCREEN_DECODE) {
-		dst = _offscreenBuffer;
-		dstPitch = _width;
-	} else {
-		dst = _screen->getPageRect(_drawPage, _x, _y, _width, _height);
-		dstPitch = Screen::SCREEN_W;
-	}
-
-	for (int y = 0; y < _height; ++y) {
-		for (int x = 0; x < _width; ++x)
-			*dst++ ^= *src++;
-		dst += dstPitch - _width;
-	}
-}
-
-#pragma mark -
-
 WSAMovie_v2::WSAMovie_v2(KyraEngine_v1 *vm) : WSAMovie_v1(vm), _xAdd(0), _yAdd(0) {}
 
 int WSAMovie_v2::open(const char *filename, int unk1, Palette *palBuf) {
@@ -389,16 +247,8 @@ int WSAMovie_v2::open(const char *filename, int unk1, Palette *palBuf) {
 	}
 
 	if (flags & 2) {
-		if (_vm->gameFlags().use16ColorMode) {
-			offsPal = 0x30;
-			_flags |= WF_HAS_PALETTE;
-			if (palBuf)
-				_screen->loadPalette(wsaData + 8 + ((_numFrames << 2) & 0xFFFF), *palBuf, 0x30);
-		}
-
 		_flags |= WF_XOR;
 	}
-
 
 	if (!(unk1 & 2)) {
 		_flags |= WF_OFFSCREEN_DECODE;

@@ -50,18 +50,18 @@ uint8 *Screen_v2::generateOverlay(const Palette &pal, uint8 *buffer, int opColor
 
 	int maxIndex = maxColor;
 	if (maxIndex == -1)
-		maxIndex = _use16ColorMode ? 255 : 127;
+		maxIndex = 127;
 
 	for (int i = 1; i != 256; ++i) {
 		const byte curR = pal[i * 3 + 0] - (((pal[i * 3 + 0] - opR) * weight) >> 7);
 		const byte curG = pal[i * 3 + 1] - (((pal[i * 3 + 1] - opG) * weight) >> 7);
 		const byte curB = pal[i * 3 + 2] - (((pal[i * 3 + 2] - opB) * weight) >> 7);
 
-		uint16 idxSum = _use16ColorMode ? 0xFFFF : 0x7FFF;
+		uint16 idxSum = 0x7FFF;
 		byte index = opColor;
 
 		for (int curIdx = 1; curIdx <= maxIndex; ++curIdx) {
-			if (!_use16ColorMode && i == curIdx)
+			if (i == curIdx)
 				continue;
 
 			int diff = 0;
@@ -80,10 +80,8 @@ uint8 *Screen_v2::generateOverlay(const Palette &pal, uint8 *buffer, int opColor
 			}
 
 			if (sum <= idxSum) {
-				if (!_use16ColorMode || (curIdx == opColor || curIdx != i)) {
-					idxSum = sum;
-					index = curIdx;
-				}
+				idxSum = sum;
+				index = curIdx;
 			}
 		}
 
@@ -266,7 +264,6 @@ void Screen_v2::setTextColorMap(const uint8 *cmap) {
 
 void Screen_v2::wsaFrameAnimationStep(int x1, int y1, int x2, int y2,
 									  int w1, int h1, int w2, int h2, int srcPage, int dstPage, int dim) {
-
 	if (!w1 || !h1 || !w2 || !h2)
 		return;
 
@@ -335,48 +332,6 @@ void Screen_v2::wsaFrameAnimationStep(int x1, int y1, int x2, int y2,
 
 	if (!dstPage)
 		addDirtyRect(x2, y2, w2, h2);
-}
-
-void Screen_v2::copyPageMemory(int srcPage, int srcPos, int dstPage, int dstPos, int numBytes) {
-	const uint8 *src = getPagePtr(srcPage) + srcPos;
-	uint8 *dst = getPagePtr(dstPage) + dstPos;
-	memcpy(dst, src, numBytes);
-}
-
-void Screen_v2::copyRegionEx(int srcPage, int srcW, int srcH, int dstPage, int dstX, int dstY, int dstW, int dstH, const ScreenDim *dim, bool flag) {
-	int x0 = dim->sx << 3;
-	int y0 = dim->sy;
-	int w0 = dim->w << 3;
-	int h0 = dim->h;
-
-	int x1 = dstX;
-	int y1 = dstY;
-	int w1 = dstW;
-	int h1 = dstH;
-
-	int x2, y2, w2;
-
-	calcBounds(w0, h0, x1, y1, w1, h1, x2, y2, w2);
-
-	const uint8 *src = getPagePtr(srcPage) + (320 * srcH) + srcW;
-	uint8 *dst = getPagePtr(dstPage) + 320 * (y0 + y1);
-
-	for (int y = 0; y < h1; y++) {
-		const uint8 *s = src + x2;
-		uint8 *d = dst + x0 + x1;
-
-		if (flag)
-			d += (h1 >> 1);
-
-		for (int x = 0; x < w1; x++) {
-			if (*s)
-				*d = *s;
-			s++;
-			d++;
-		}
-		dst += 320;
-		src += 320;
-	}
 }
 
 bool Screen_v2::calcBounds(int w0, int h0, int &x1, int &y1, int &w1, int &h1, int &x2, int &y2, int &w2) {

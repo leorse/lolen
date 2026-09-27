@@ -19,7 +19,6 @@
  *
  */
 
-
 #ifndef KYRA_LOL_H
 #define KYRA_LOL_H
 
@@ -339,10 +338,6 @@ private:
 	static const char *const _charPreviewNamesDefault[];
 	static const char *const _charPreviewNamesRussianFloppy[];
 
-	// PC98/FM-TOWNS specific data
-	static const uint16 _charPosXPC98[];
-	static const char *const _charNamesJapanese[];
-
 	WSAMovie_v2 *_chargenWSA;
 	static const uint8 _chargenFrameTableTalkie[];
 	static const uint8 _chargenFrameTableFloppy[];
@@ -359,8 +354,6 @@ private:
 
 	int getCharSelection();
 	int selectionCharAccept();
-
-	void showStarcraftLogo();
 
 	int _charSelection;
 	int _charSelectionInfoResult;
@@ -812,7 +805,6 @@ private:
 	                            // Maybe we can someday reduce the size.
 	const char *getLangString(uint16 id);
 	uint8 *getTableEntry(uint8 *buffer, uint16 id);
-	void decodeSjis(const char *src, char *dst);
 	int decodeCyrillic(const char *src, char *dst);
 
 	static const char *const _languageExt[];
@@ -1311,7 +1303,6 @@ private:
 	void restoreMonsterTempData(LevelTempData *tmp) override;
 	void releaseMonsterTempData(LevelTempData *tmp) override;
 
-	Graphics::Surface *generateSaveThumbnail() const override;
 };
 
 class HistoryPlayer {

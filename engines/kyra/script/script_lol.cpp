@@ -19,7 +19,6 @@
  *
  */
 
-
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
 #include "kyra/engine/timer.h"
@@ -177,7 +176,6 @@ int LoLEngine::olol_moveParty(EMCState *script) {
 
 	return 1;
 }
-
 
 int LoLEngine::olol_delay(EMCState *script) {
 	debugC(3, kDebugLevelScriptFuncs, "LoLEngine::olol_delay(%p) (%d)", (const void *)script, stackPos(0));
@@ -563,7 +561,7 @@ int LoLEngine::olol_clearDialogueField(EMCState *script) {
 
 	_screen->setScreenDim(5);
 	const ScreenDim *d = _screen->getScreenDim(5);
-	_screen->fillRect(d->sx, d->sy, d->sx + d->w - (_flags.use16ColorMode ? 3 : 2), d->sy + d->h - 2, d->col2);
+	_screen->fillRect(d->sx, d->sy, d->sx + d->w - 2, d->sy + d->h - 2, d->col2);
 	_txt->clearDim(4);
 	_txt->resetDimTextPositions(4);
 
@@ -590,10 +588,7 @@ int LoLEngine::olol_fadeToBlack(EMCState *script) {
 
 int LoLEngine::olol_fadePalette(EMCState *script) {
 	debugC(3, kDebugLevelScriptFuncs, "LoLEngine::olol_fadePalette(%p)", (const void *)script);
-	if (_flags.use16ColorMode)
-		setPaletteBrightness(_screen->getPalette(0), _brightness, _lampEffect);
-	else
-		_screen->fadePalette(_screen->getPalette(3), 10);
+	_screen->fadePalette(_screen->getPalette(3), 10);
 	_screen->_fadeFlag = 0;
 	return 1;
 }
@@ -857,13 +852,9 @@ int LoLEngine::olol_fadeClearSceneWindow(EMCState *script) {
 
 int LoLEngine::olol_fadeSequencePalette(EMCState *script) {
 	debugC(3, kDebugLevelScriptFuncs, "LoLEngine::olol_fadeSequencePalette(%p)", (const void *)script);
-	if (_flags.use16ColorMode) {
-		setPaletteBrightness(_screen->getPalette(0), _brightness, _lampEffect);
-	} else {
-		_screen->getPalette(3).copy(_screen->getPalette(0), 128);
-		_screen->loadSpecialColors(_screen->getPalette(3));
-		_screen->fadePalette(_screen->getPalette(3), 10);
-	}
+	_screen->getPalette(3).copy(_screen->getPalette(0), 128);
+	_screen->loadSpecialColors(_screen->getPalette(3));
+	_screen->fadePalette(_screen->getPalette(3), 10);
 	_screen->_fadeFlag = 0;
 	return 1;
 }
@@ -1036,7 +1027,6 @@ int LoLEngine::olol_setScriptTimer(EMCState *script) {
 	if (stackPos(1)) {
 		_timer->enable(id);
 		_timer->setCountdown(id, stackPos(1));
-
 	} else {
 		_timer->disable(id);
 	}
@@ -1317,13 +1307,8 @@ int LoLEngine::olol_drawExitButton(EMCState *script) {
 	int w = _screen->getTextWidth(str);
 	int hButton = _screen->getFontHeight() + 3;
 
-	if (_flags.use16ColorMode) {
-		gui_drawBox(x - offs - w, y - hButton, w + offs, hButton, 0xEE, 0xCC, 0x11);
-		_screen->printText(str, x - (offs >> 1) - w, y - hButton + 2, 0xBB, 0);
-	} else {
-		gui_drawBox(x - offs - w, y - hButton, w + offs, hButton, 136, 251, 252);
-		_screen->printText(str, x - (offs >> 1) - w, y - hButton + 2, 144, 0);
-	}
+	gui_drawBox(x - offs - w, y - hButton, w + offs, hButton, 136, 251, 252);
+	_screen->printText(str, x - (offs >> 1) - w, y - hButton + 2, 144, 0);
 
 	if (stackPos(1))
 		_screen->drawGridBox(x - offs - w + 1, y - hButton + 1, w + offs - 2, hButton - 2, 1);
@@ -1397,26 +1382,22 @@ int LoLEngine::olol_countAllMonsters(EMCState *script) {
 int LoLEngine::olol_playEndSequence(EMCState *script) {
 	debugC(3, kDebugLevelScriptFuncs, "LoLEngine::olol_playEndSequence(%p)", (const void *)script);
 
-	if (_flags.isDemo) {
-		_screen->fadeToBlack(150);
-	} else {
-		int c = 0;
-		if (_characters[0].id == -9)
-			c = 1;
-		else if (_characters[0].id == -5)
-			c = 3;
-		else if (_characters[0].id == -1)
-			c = 2;
+	int c = 0;
+	if (_characters[0].id == -9)
+		c = 1;
+	else if (_characters[0].id == -5)
+		c = 3;
+	else if (_characters[0].id == -1)
+		c = 2;
 
-		while (snd_updateCharacterSpeech())
-			delay(_tickLength);
+	while (snd_updateCharacterSpeech())
+		delay(_tickLength);
 
-		_eventList.clear();
-		_screen->hideMouse();
-		_screen->getPalette(1).clear();
+	_eventList.clear();
+	_screen->hideMouse();
+	_screen->getPalette(1).clear();
 
-		showOutro(c, (_monsterDifficulty == 2));
-	}
+	showOutro(c, (_monsterDifficulty == 2));
 
 	// Don't call quitGame() on a return to launcher request (because this would
 	// make the next game launched from the launcher quit instantly.
@@ -1558,7 +1539,6 @@ int LoLEngine::olol_moveBlockObjects(EMCState *script) {
 			placeMonster(m, 0, 0);
 
 			res = 1;
-
 		} else {
 			if (!(_itemsInPlay[l].shpCurFrame_flg & 0x4000) || !includeItems)
 				continue;
@@ -1973,7 +1953,6 @@ int LoLEngine::olol_assignSpecialGuiShape(EMCState *script) {
 		_specialGuiShapeX = stackPos(2);
 		_specialGuiShapeY = stackPos(3);
 		_specialGuiShapeMirrorFlag = stackPos(4);
-
 	} else {
 		_specialGuiShape = 0;
 		_specialGuiShapeX = _specialGuiShapeY = _specialGuiShapeMirrorFlag = 0;
@@ -2012,7 +1991,7 @@ int LoLEngine::olol_findInventoryItem(EMCState *script) {
 
 int LoLEngine::olol_restoreFadePalette(EMCState *script) {
 	debugC(3, kDebugLevelScriptFuncs, "LoLEngine::olol_restoreFadePalette(%p)", (const void *)script);
-	_screen->getPalette(0).copy(_screen->getPalette(1), 0, _flags.use16ColorMode ? 16 : 128);
+	_screen->getPalette(0).copy(_screen->getPalette(1), 0, 128);
 	_screen->fadePalette(_screen->getPalette(0), 10);
 	_screen->_fadeFlag = 0;
 	return 1;
@@ -2092,7 +2071,6 @@ int LoLEngine::olol_pitDrop(EMCState *script) {
 		pitDropScroll(9);
 		snd_playSoundEffect(-1, -1);
 		shakeScene(30, 4, 0, 1);
-
 	} else {
 		int t = -1;
 		for (int i = 0; i < 4; i++) {
@@ -2129,53 +2107,32 @@ int LoLEngine::olol_paletteFlash(EMCState *script) {
 	debugC(3, kDebugLevelScriptFuncs, "LoLEngine::olol_paletteFlash(%p) (%d)", (const void *)script, stackPos(0));
 	Palette &p1 = _screen->getPalette(1);
 
-	if (_flags.use16ColorMode) {
-		Palette p2(16);
-		p2.copy(p1);
-		uint8 *d = p2.getData();
+	Palette &p2 = _screen->getPalette(3);
 
-		for (int i = 0; i < 16; i++)
-			d[i * 3] = 0x3F;
+	uint8 ovl[256];
+	generateFlashPalette(p1, p2, stackPos(0));
+	_screen->loadSpecialColors(p1);
+	_screen->loadSpecialColors(p2);
 
-		_screen->setScreenPalette(p2);
-		_screen->updateScreen();
+	if (_smoothScrollModeNormal) {
+		for (int i = 0; i < 256; i++)
+			ovl[i] = i;
+		ovl[1] = 6;
 
-		delay(4 * _tickLength);
-
-		_screen->setScreenPalette(p1);
-		if (_smoothScrollModeNormal)
-			_screen->copyRegion(112, 0, 112, 0, 176, 120, 2, 0);
-
-		_screen->updateScreen();
-
-	} else {
-		Palette &p2 = _screen->getPalette(3);
-
-		uint8 ovl[256];
-		generateFlashPalette(p1, p2, stackPos(0));
-		_screen->loadSpecialColors(p1);
-		_screen->loadSpecialColors(p2);
-
-		if (_smoothScrollModeNormal) {
-			for (int i = 0; i < 256; i++)
-				ovl[i] = i;
-			ovl[1] = 6;
-
-			_screen->copyRegion(112, 0, 112, 0, 176, 120, 0, 2);
-			_screen->applyOverlay(112, 0, 176, 120, 0, ovl);
-		}
-
-		_screen->setScreenPalette(p2);
-		_screen->updateScreen();
-
-		delay(2 * _tickLength);
-
-		_screen->setScreenPalette(p1);
-		if (_smoothScrollModeNormal)
-			_screen->copyRegion(112, 0, 112, 0, 176, 120, 2, 0);
-
-		_screen->updateScreen();
+		_screen->copyRegion(112, 0, 112, 0, 176, 120, 0, 2);
+		_screen->applyOverlay(112, 0, 176, 120, 0, ovl);
 	}
+
+	_screen->setScreenPalette(p2);
+	_screen->updateScreen();
+
+	delay(2 * _tickLength);
+
+	_screen->setScreenPalette(p1);
+	if (_smoothScrollModeNormal)
+		_screen->copyRegion(112, 0, 112, 0, 176, 120, 2, 0);
+
+	_screen->updateScreen();
 
 	return 0;
 }
@@ -2195,14 +2152,14 @@ int LoLEngine::olol_restoreMagicShroud(EMCState *script) {
 
 	Palette *fadeTab[28];
 	for (int i = 0; i < 28; i++)
-		fadeTab[i] = new Palette(_flags.use16ColorMode ? 16 : 256);
+		fadeTab[i] = new Palette(256);
 
 	Palette **tpal1 = &fadeTab[0];
 	Palette **tpal2 = &fadeTab[1];
 	Palette **tpal3 = &fadeTab[2];
 	Palette **tpal4 = 0;
 
-	int len = _flags.use16ColorMode ? 48 : 768;
+	int len = 768;
 	_res->loadFileToBuf("LITEPAL1.COL", (*tpal1)->getData(), len);
 	tpal2 = _screen->generateFadeTable(tpal3, 0, *tpal1, 21);
 
@@ -2334,7 +2291,6 @@ int LoLEngine::olol_getItemPrice(EMCState *script) {
 			return 50;
 		c = (c + 99) / 100;
 		return c * 100;
-
 	} else {
 		for (int i = 0; i < 46; i++) {
 			if (_itemCost[i] >= c)
@@ -2395,9 +2351,8 @@ int LoLEngine::tlol_processWsaFrame(const TIM *tim, const uint16 *param) {
 	int h2 = (h1 * factor) / 100;
 
 	_tim->animator()->displayFrame(animIndex, 2, frame);
-	_screen->wsaFrameAnimationStep(x1, y1, x2, y2, w1, h1, w2, h2, 2, _flags.isDemo && _flags.platform != Common::kPlatformPC98 ? 0 : 8, 0);
-	if (!_flags.isDemo && _flags.platform != Common::kPlatformPC98)
-		_screen->checkedPageUpdate(8, 4);
+	_screen->wsaFrameAnimationStep(x1, y1, x2, y2, w1, h1, w2, h2, 2, 0, 0);
+	_screen->checkedPageUpdate(8, 4);
 	_screen->updateScreen();
 
 	return 1;
@@ -2455,13 +2410,9 @@ int LoLEngine::tlol_fadeClearWindow(const TIM *tim, const uint16 *param) {
 		break;
 
 	case 1:
-		if (_flags.use16ColorMode) {
-			_screen->fadePalette(_screen->getPalette(1), 10);
-		} else {
-			_screen->getPalette(3).copy(_screen->getPalette(0), 128);
-			_screen->loadSpecialColors(_screen->getPalette(3));
-			_screen->fadePalette(_screen->getPalette(3), 10);
-		}
+		_screen->getPalette(3).copy(_screen->getPalette(0), 128);
+		_screen->loadSpecialColors(_screen->getPalette(3));
+		_screen->fadePalette(_screen->getPalette(3), 10);
 		_screen->_fadeFlag = 0;
 		break;
 
@@ -2471,7 +2422,7 @@ int LoLEngine::tlol_fadeClearWindow(const TIM *tim, const uint16 *param) {
 
 	case 3:
 		_screen->loadSpecialColors(_screen->getPalette(3));
-		_screen->fadePalette(_screen->getPalette(_flags.use16ColorMode ? 1 : 3), 10);
+		_screen->fadePalette(_screen->getPalette(3), 10);
 		_screen->_fadeFlag = 0;
 		break;
 
@@ -2530,7 +2481,7 @@ int LoLEngine::tlol_clearTextField(const TIM *tim, const uint16 *param) {
 		return 1;
 	_screen->setScreenDim(5);
 	const ScreenDim *d = _screen->_curDim;
-	_screen->fillRect(d->sx, d->sy, d->sx + d->w - (_flags.use16ColorMode ? 3 : 2), d->sy + d->h - 2, d->col2);
+	_screen->fillRect(d->sx, d->sy, d->sx + d->w - 2, d->sy + d->h - 2, d->col2);
 	_txt->clearDim(4);
 	_txt->resetDimTextPositions(4);
 	return 1;
@@ -2584,32 +2535,26 @@ int LoLEngine::tlol_fadeInScene(const TIM *tim, const uint16 *param) {
 	_screen->loadBitmap(filename.c_str(), 7, 5, &_screen->getPalette(0));
 
 	uint8 *overlay = 0;
-	if (!_flags.use16ColorMode) {
-		filename.clear();
+	filename.clear();
 
-		if (_flags.isTalkie)
-			filename = Common::String(_languageExt[_lang]) + "/";
+	if (_flags.isTalkie)
+		filename = Common::String(_languageExt[_lang]) + "/";
 
-		filename += overlayFile;
-		overlay = _res->fileData(filename.c_str(), 0);
+	filename += overlayFile;
+	overlay = _res->fileData(filename.c_str(), 0);
 
-		for (int i = 0; i < 3; ++i) {
-			uint32 endTime = _system->getMillis() + 10 * _tickLength;
-			_screen->copyBlockAndApplyOverlayOutro(4, 2, overlay);
-			_screen->copyRegion(0, 0, 0, 0, 320, 200, 2, 0, Screen::CR_NO_P_CHECK);
-			_screen->updateScreen();
-			delayUntil(endTime);
-		}
+	for (int i = 0; i < 3; ++i) {
+		uint32 endTime = _system->getMillis() + 10 * _tickLength;
+		_screen->copyBlockAndApplyOverlayOutro(4, 2, overlay);
+		_screen->copyRegion(0, 0, 0, 0, 320, 200, 2, 0, Screen::CR_NO_P_CHECK);
+		_screen->updateScreen();
+		delayUntil(endTime);
 	}
 
 	_screen->copyRegion(0, 0, 0, 0, 320, 200, 4, 0, Screen::CR_NO_P_CHECK);
 
-	if (_flags.use16ColorMode) {
-		_screen->fadePalette(_screen->getPalette(0), 5);
-	} else {
-		_screen->updateScreen();
-		delete[] overlay;
-	}
+	_screen->updateScreen();
+	delete[] overlay;
 
 	return 1;
 }
@@ -2626,12 +2571,6 @@ int LoLEngine::tlol_fadeInPalette(const TIM *tim, const uint16 *param) {
 
 	Palette pal(_screen->getPalette(0).getNumColors());
 	_screen->loadBitmap(bitmap, 3, 3, &pal);
-
-	if (_flags.use16ColorMode) {
-		_screen->getPalette(0).clear();
-		_screen->setScreenPalette(_screen->getPalette(0));
-		_screen->copyPage(2, 0);
-	}
 
 	_screen->fadePalette(pal, param[1]);
 

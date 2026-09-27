@@ -96,19 +96,6 @@ protected:
 	uint8 *_frameData;
 };
 
-class WSAMovieAmiga : public WSAMovie_v1 {
-public:
-	WSAMovieAmiga(KyraEngine_v1 *vm);
-	int open(const char *filename, int offscreen, Palette *palette) override;
-	void close() override;
-
-	void displayFrame(int frameNum, int pageNum, int x, int y, uint16 flags, const uint8 *table1, const uint8 *table2) override;
-private:
-	void processFrame(int frameNum, uint8 *dst) override;
-
-	uint8 *_buffer;
-};
-
 class WSAMovie_v2 : public WSAMovie_v1 {
 public:
 	WSAMovie_v2(KyraEngine_v1 *vm);

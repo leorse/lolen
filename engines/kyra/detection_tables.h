@@ -23,18 +23,14 @@
 
 namespace {
 
-#define FLAGS(x, y, z, a, b, c, d, e, f, id) { Common::UNK_LANG, Common::UNK_LANG, Common::UNK_LANG, Common::UNK_LANG, Common::kPlatformUnknown, x, y, z, a, b, c, d, e, f, id }
-#define FLAGS_FAN(fanLang, repLang, x, y, z, a, b, c, d, e, f, id) { Common::UNK_LANG, Common::UNK_LANG, fanLang, repLang, Common::kPlatformUnknown, x, y, z, a, b, c, d, e, f, id }
+#define FLAGS(talkie, installer) { Common::UNK_LANG, Common::UNK_LANG, Common::UNK_LANG, talkie, installer, Kyra::GI_LOL }
+#define FLAGS_FAN(fanLang, repLang, talkie, installer) { Common::UNK_LANG, fanLang, repLang, talkie, installer, Kyra::GI_LOL }
 
-#define LOL_CD_FLAGS FLAGS(false, false, true, false, false, false, false, false, false, Kyra::GI_LOL)
-#define LOL_CD_FAN_FLAGS(x, y) FLAGS_FAN(x, y, false, false, true, false, false, false, false, false, false, Kyra::GI_LOL)
-#define LOL_FLOPPY_FLAGS FLAGS(false, false, false, false, false, false, false, false, false, Kyra::GI_LOL)
-#define LOL_FLOPPY_FAN_FLAGS(x, y) FLAGS_FAN(x, y, false, false, false, false, false, false, false, false, false, Kyra::GI_LOL)
-#define LOL_FLOPPY_CMP_FLAGS FLAGS(false, false, false, false, false, false, false, false, true, Kyra::GI_LOL)
-#define LOL_PC9801_FLAGS FLAGS(false, false, false, false, true, true, false, false, false, Kyra::GI_LOL)
-#define LOL_FMTOWNS_FLAGS FLAGS(false, false, false, false, true, false, false, false, false, Kyra::GI_LOL)
-#define LOL_DEMO_FLAGS FLAGS(true, true, false, false, false, false, false, false, false, Kyra::GI_LOL)
-#define LOL_CD_DEMO_FLAGS FLAGS(true, false, true, false, false, false, false, false, false, Kyra::GI_LOL)
+#define LOL_CD_FLAGS FLAGS(true, false)
+#define LOL_CD_FAN_FLAGS(x, y) FLAGS_FAN(x, y, true, false)
+#define LOL_FLOPPY_FLAGS FLAGS(false, false)
+#define LOL_FLOPPY_FAN_FLAGS(x, y) FLAGS_FAN(x, y, false, false)
+#define LOL_FLOPPY_CMP_FLAGS FLAGS(false, true)
 
 const KYRAGameDescription adGameDescs[] = {
 	{
@@ -508,20 +504,6 @@ const KYRAGameDescription adGameDescs[] = {
 		LOL_FLOPPY_FLAGS
 	},
 
-	{ // Japanese PC9821 version - Bug 9828
-		{
-			"lol",
-			"Extracted",
-			AD_ENTRY2s("GENERAL.PAK",  "8902b233405461025e25093b9c4c8d2c", AD_NO_SIZE,
-					   "CHAPTER7.PAK", "32a46c338a3d6249c273cc3b3881bb8a", AD_NO_SIZE),
-			Common::JA_JPN,
-			Common::kPlatformPC98,
-			ADGF_NO_FLAGS,
-			GUIO5(GUIO_NOSPEECH, GUIO_MIDIPC98, GUIO_RENDERPC98_16C, GAMEOPTION_LOL_SCROLLING, GAMEOPTION_LOL_CURSORS)
-		},
-		LOL_PC9801_FLAGS
-	},
-
 	{ // Russian fan translation
 		{
 			"lol",
@@ -536,104 +518,7 @@ const KYRAGameDescription adGameDescs[] = {
 		LOL_FLOPPY_FAN_FLAGS(Common::RU_RUS, Common::EN_ANY)
 	},
 
-	{
-		{
-			"lol",
-			0,
-			AD_ENTRY2s("GENERAL.PAK",	"3fe6539b9b09084c0984eaf7170464e9", AD_NO_SIZE,
-					   "MUS.PAK",		"008dc69d8cbcdb6bae30e270fab26e76", AD_NO_SIZE),
-			Common::JA_JPN,
-			Common::kPlatformPC98,
-			ADGF_NO_FLAGS,
-			GUIO6(GUIO_NOSPEECH, GUIO_MIDIPC98, GUIO_RENDERPC98_16C, GAMEOPTION_LOL_SCROLLING, GAMEOPTION_LOL_CURSORS, GAMEOPTION_LOL_SAVENAMES)
-		},
-		LOL_PC9801_FLAGS
-	},
-
-	{
-		{
-			"lol",
-			0,
-			AD_ENTRY2s("GENERAL.PAK",	"2e4d4ce54bac9162e11fcba6907b576e", AD_NO_SIZE,
-					   "TMUS.PAK",		"5543dae575164e51856f5a49cfd6b368", AD_NO_SIZE),
-			Common::JA_JPN,
-			Common::kPlatformFMTowns,
-			ADGF_NO_FLAGS,
-			GUIO6(GUIO_NOSPEECH, GUIO_MIDITOWNS, GUIO_RENDERFMTOWNS, GAMEOPTION_LOL_SCROLLING, GAMEOPTION_LOL_CURSORS, GAMEOPTION_LOL_SAVENAMES)
-		},
-		LOL_FMTOWNS_FLAGS
-	},
-
-	{
-		{
-			"lol",
-			"Demo",
-			AD_ENTRY2s("INTRO.PAK",		"4bc22a3b57f19a49212c5de58ab014d6", AD_NO_SIZE,
-					   "INTROVOC.PAK",	"7e578e4f1da31c1f294e14a8e8f3cc44", AD_NO_SIZE),
-			Common::EN_ANY,
-			Common::kPlatformDOS,
-			ADGF_DEMO,
-			GUIO5(GUIO_MIDIADLIB, GUIO_MIDIMT32, GUIO_MIDIGM, GUIO_MIDIPCSPK, GUIO_RENDERVGA)
-		},
-		LOL_DEMO_FLAGS
-	},
-
-	{
-		{
-			"lol",
-			"Demo",
-			AD_ENTRY1s("GENERAL.PAK", "e94863d86c4597a2d581d05481c152ba", AD_NO_SIZE),
-			Common::EN_ANY,
-			Common::kPlatformDOS,
-			ADGF_DEMO,
-			GUIO5(GUIO_MIDIADLIB, GUIO_MIDIMT32, GUIO_MIDIGM, GUIO_MIDIPCSPK, GUIO_RENDERVGA)
-		},
-		LOL_DEMO_FLAGS
-	},
-
-	{ // Interactive CD demo, Bugreport #6777
-		{
-			"lol",
-			"CD/Demo",
-			AD_ENTRY2s("GENERAL.PAK",	"17e442d3b6109d4ae8354fa55d6c8121", AD_NO_SIZE,
-					   "L01.PAK",		"759a0ac26808d77ea968bd392355ba1d", AD_NO_SIZE),
-			Common::EN_ANY,
-			Common::kPlatformDOS,
-			ADGF_DROPLANGUAGE | ADGF_CD | ADGF_DEMO,
-			GUIO8(GUIO_MIDIADLIB, GUIO_MIDIMT32, GUIO_MIDIGM, GUIO_MIDIPCSPK, GUIO_RENDERVGA, GAMEOPTION_LOL_SCROLLING, GAMEOPTION_LOL_CURSORS, GAMEOPTION_LOL_SAVENAMES)
-		},
-		LOL_CD_DEMO_FLAGS
-	},
-
-	{ // Interactive CD demo, Bugreport #6777
-		{
-			"lol",
-			"CD/Demo",
-			AD_ENTRY2s("GENERAL.PAK",	"17e442d3b6109d4ae8354fa55d6c8121", AD_NO_SIZE,
-					   "L01.PAK",		"759a0ac26808d77ea968bd392355ba1d", AD_NO_SIZE),
-			Common::FR_FRA,
-			Common::kPlatformDOS,
-			ADGF_DROPLANGUAGE | ADGF_CD | ADGF_DEMO,
-			GUIO8(GUIO_MIDIADLIB, GUIO_MIDIMT32, GUIO_MIDIGM, GUIO_MIDIPCSPK, GUIO_RENDERVGA, GAMEOPTION_LOL_SCROLLING, GAMEOPTION_LOL_CURSORS, GAMEOPTION_LOL_SAVENAMES)
-		},
-		LOL_CD_DEMO_FLAGS
-	},
-
-	{ // Interactive CD demo, Bugreport #6777
-		{
-			"lol",
-			"CD/Demo",
-			AD_ENTRY2s("GENERAL.PAK",	"17e442d3b6109d4ae8354fa55d6c8121", AD_NO_SIZE,
-					   "L01.PAK",		"759a0ac26808d77ea968bd392355ba1d", AD_NO_SIZE),
-			Common::DE_DEU,
-			Common::kPlatformDOS,
-			ADGF_DROPLANGUAGE | ADGF_CD | ADGF_DEMO,
-			GUIO8(GUIO_MIDIADLIB, GUIO_MIDIMT32, GUIO_MIDIGM, GUIO_MIDIPCSPK, GUIO_RENDERVGA, GAMEOPTION_LOL_SCROLLING, GAMEOPTION_LOL_CURSORS, GAMEOPTION_LOL_SAVENAMES)
-		},
-		LOL_CD_DEMO_FLAGS
-	},
-
-	{ AD_TABLE_END_MARKER, FLAGS(0, 0, 0, 0, 0, 0, 0, 0, 0, 0) }
+	{ AD_TABLE_END_MARKER, FLAGS(false, false) }
 };
 
 const PlainGameDescriptor gameList[] = {

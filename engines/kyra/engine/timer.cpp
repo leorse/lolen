@@ -128,13 +128,6 @@ void TimerManager::update() {
 	}
 }
 
-void TimerManager::resync() {
-	const uint32 curTime = _isPaused ? _pauseStart : _system->getMillis();
-
-	_nextRun = 0;	// force rerun
-	Common::for_each(_timers.begin(), _timers.end(), TimerResync(_vm, curTime));
-}
-
 void TimerManager::resetNextRun() {
 	_nextRun = 0;
 }
@@ -240,64 +233,6 @@ void TimerManager::disable(uint8 id) {
 		timer->enabled &= (~1);
 	else
 		warning("TimerManager::disable: No timer %d", id);
-}
-
-void TimerManager::loadDataFromFile(Common::SeekableReadStream &file, int version) {
-	const uint32 loadTime = _isPaused ? _pauseStart : _system->getMillis();
-
-	if (version <= 7) {
-		_nextRun = 0;
-		for (int i = 0; i < 32; ++i) {
-			uint8 enabled = file.readByte();
-			int32 countdown = file.readSint32BE();
-			uint32 nextRun = file.readUint32BE();
-
-			Iterator timer = Common::find_if(_timers.begin(), _timers.end(), TimerEqual(i));
-			if (timer != _timers.end()) {
-				timer->enabled = enabled;
-				timer->countdown = countdown;
-
-				if (nextRun) {
-					timer->nextRun = nextRun + loadTime;
-					timer->lastUpdate = timer->nextRun - countdown * _vm->tickLength();
-				} else {
-					timer->nextRun = loadTime;
-					timer->lastUpdate = loadTime - countdown * _vm->tickLength();
-				}
-			} else {
-				warning("Loading timer data for non existing timer %d", i);
-			}
-		}
-	} else {
-		int entries = file.readByte();
-		for (int i = 0; i < entries; ++i) {
-			uint8 id = file.readByte();
-
-			Iterator timer = Common::find_if(_timers.begin(), _timers.end(), TimerEqual(id));
-			if (timer != _timers.end()) {
-				timer->enabled = file.readByte();
-				timer->countdown = file.readSint32BE();
-				timer->lastUpdate = file.readSint32BE();
-			} else {
-				warning("Loading timer data for non existing timer %d", id);
-				file.seek(7, SEEK_CUR);
-			}
-		}
-
-		resync();
-	}
-}
-
-void TimerManager::saveDataToFile(Common::WriteStream &file) const {
-	const uint32 saveTime = _isPaused ? _pauseStart : _system->getMillis();
-
-	file.writeByte(count());
-	for (CIterator pos = _timers.begin(); pos != _timers.end(); ++pos) {
-		file.writeByte(pos->id);
-		file.writeByte(pos->enabled);
-		file.writeSint32BE(pos->countdown);
-		file.writeSint32BE(pos->lastUpdate - saveTime);
-	}
 }
 
 } // End of namespace Kyra

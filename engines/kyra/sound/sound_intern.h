@@ -28,11 +28,8 @@
 #include "audio/midiparser.h"
 #include "audio/miles.h"
 #include "audio/softsynth/emumidi.h"
-#include "audio/softsynth/fmtowns_pc98/towns_audio.h"
 
 #include "common/mutex.h"
-
-class TownsPC98_AudioDriver;
 
 namespace Audio {
 class PCSpeakerStream;
@@ -105,45 +102,6 @@ private:
 	Audio::MidiDriver_Miles_Midi *_output;
 
 	Common::Mutex _mutex;
-};
-
-class SoundTownsPC98_v2 : public Sound {
-public:
-	SoundTownsPC98_v2(KyraEngine_v1 *vm, Audio::Mixer *mixer);
-	~SoundTownsPC98_v2() override;
-
-	kType getMusicType() const override { return _vm->gameFlags().platform == Common::kPlatformFMTowns ? kTowns : kPC98; }
-
-	bool init() override;
-	void process() override;
-
-	void initAudioResourceInfo(int set, void *info) override;
-	void selectAudioResourceSet(int set) override;
-	bool hasSoundFile(uint file) const override;
-	void loadSoundFile(uint file) override {}
-	void loadSoundFile(const Common::Path &file) override;
-
-	void playTrack(uint8 track) override;
-	void haltTrack() override;
-	void beginFadeOut() override;
-
-	int32 voicePlay(const char *file, Audio::SoundHandle *handle, uint8 volume = 255, uint8 priority = 255, bool isSfx = true) override;
-	void playSoundEffect(uint16 track, uint8 volume = 0xFF) override;
-
-	void updateVolumeSettings() override;
-
-private:
-	Audio::AudioStream *_currentSFX;
-	int _lastTrack;
-	bool _useFmSfx;
-
-	uint8 *_musicTrackData;
-	uint8 *_sfxTrackData;
-	TownsPC98_AudioDriver *_driver;
-
-	const SoundResourceInfo_TownsPC98V2 *res() const { return _resInfo[_currentResourceSet]; }
-	SoundResourceInfo_TownsPC98V2 *_resInfo[3];
-	int _currentResourceSet;
 };
 
 // PC Speaker MIDI driver

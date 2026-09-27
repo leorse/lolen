@@ -35,10 +35,6 @@
 
 class OSystem;
 
-namespace Graphics {
-class FontSJIS;
-} // End of namespace Graphics
-
 namespace Kyra {
 
 typedef Common::Functor0<void> UpdateFunctor;
@@ -68,10 +64,7 @@ public:
 	 */
 	enum Type {
 		kASCII = 0,
-		kJIS_X0201,
-		kSJIS,
-		kBIG5,
-		kJohab
+		kBIG5
 	};
 
 public:
@@ -83,12 +76,7 @@ public:
 	virtual bool load(Common::SeekableReadStream &file) = 0;
 
 	/**
-	 * Whether the font draws on the overlay.
-	 */
-	virtual bool usesOverlay() const { return false; }
-
-	/**
-	* Whether the font is Ascii or Sjis.
+	* Whether the font is Ascii or Big5.
 	*/
 	virtual Type getType() const = 0;
 
@@ -109,8 +97,7 @@ public:
 	virtual int getCharWidth(uint16 c) const = 0;
 
 	/**
-	 * Gets the height of a specific character. The only font that needs this
-	 * is the SegaCD one. For all other fonts this is a fixed value.
+	 * Gets the height of a specific character.
 	 */
 	virtual int getCharHeight(uint16 c) const { return getHeight(); }
 
@@ -118,11 +105,6 @@ public:
 	 * Sets a text palette map. The map contains 16 entries.
 	 */
 	virtual void setColorMap(const uint8 *src) = 0;
-
-	/**
-	* Sets a text 16bit palette map. Only used in in EOB II FM-Towns. The map contains 2 entries.
-	*/
-	virtual void setHiColorMap(const uint32 *src) {}
 
 	enum FontStyle {
 		kStyleNone			=	0,
@@ -188,74 +170,6 @@ private:
 	uint16 *_bitmapOffsets;
 };
 
-/**
- * Implementation of the Font interface for Kyra 1 style (non-native AmigaDOS) AMIGA fonts.
- */
-class AMIGAFont : public Font {
-public:
-	AMIGAFont();
-	~AMIGAFont() override { unload(); }
-
-	bool load(Common::SeekableReadStream &file) override;
-	Type getType() const override { return kASCII; }
-	int getHeight() const override { return _height; }
-	int getWidth() const override { return _width; }
-	int getCharWidth(uint16 c) const override;
-	void setColorMap(const uint8 *src) override {}
-	void drawChar(uint16 c, byte *dst, int pitch, int) const override;
-
-private:
-	void unload();
-
-	int _width, _height;
-
-	struct Character {
-		uint8 yOffset, xOffset, width;
-
-		struct Graphics {
-			uint16 width, height;
-			uint8 *bitmap;
-		} graphics;
-	};
-
-	Character _chars[255];
-};
-
-/**
- * Implementation of the Font interface for FM-Towns/PC98 fonts
- */
-class SJISFont : public Font {
-public:
-	SJISFont(Common::SharedPtr<Graphics::FontSJIS> &font, const uint8 invisColor, bool is16Color, bool drawOutline, int extraSpacing);
-	~SJISFont() override {}
-
-	bool usesOverlay() const override { return true; }
-	Type getType() const override { return kSJIS; }
-
-	bool load(Common::SeekableReadStream &) override { return true; }
-	int getHeight() const override;
-	int getWidth() const override;
-	int getCharWidth(uint16 c) const override;
-	void setColorMap(const uint8 *src) override;
-	void setStyles(int style) override { _style = style; }
-	void drawChar(uint16 c, byte *dst, int pitch, int) const override;
-
-protected:
-	const uint8 *_colorMap;
-	Common::SharedPtr<Graphics::FontSJIS> _font;
-	const bool _drawOutline;
-	int _style;
-
-private:
-	const uint8 _invisColor;
-	const bool _isTextMode;
-	// We use this for cases where the font width returned by getWidth() or getCharWidth() does not match the original.
-	// The original Japanese game versions use hard coded sjis font widths of 8 or 9. However, this does not necessarily
-	// depend on whether an outline is used or not (neither LOL/PC-9801 nor LOL/FM-TOWNS use an outline, but the first
-	// version uses a font width of 8 where the latter uses a font width of 9).
-	const int _sjisWidthOffset;
-};
-
 class ChineseFont : public Font {
 public:
 	ChineseFont(int pitch, int renderWidth, int renderHeight, int spacingWidth, int spacingHeight, int extraSpacingWidth, int extraSpacingHeight);
@@ -316,7 +230,6 @@ private:
 	void processColorMap() override;
 };
 
-
 class MultiSubsetFont final : public Font {
 public:
 	MultiSubsetFont(Common::Array<Font*> *subsets) : Font(), _subsets(subsets) {}
@@ -354,45 +267,13 @@ public:
 	~Palette();
 
 	enum {
-		kVGABytesPerColor = 3,
-		kPC98BytesPerColor = 3,
-		kAmigaBytesPerColor = 2
+		kVGABytesPerColor = 3
 	};
 
 	/**
 	 * Load a VGA palette from the given stream.
 	 */
 	void loadVGAPalette(Common::ReadStream &stream, int startIndex, int colors);
-
-	/**
-	* Load a HiColor palette from the given stream.
-	*/
-	void loadHiColorPalette(Common::ReadStream &stream, int startIndex, int colors);
-
-	/**
-	 * Load a EGA palette from the given stream.
-	 */
-	void loadEGAPalette(Common::ReadStream &stream, int startIndex, int colors);
-
-	/**
-	 * Set default CGA palette. We only need the cyan/magenta/grey mode.
-	 */
-	enum CGAIntensity {
-		kIntensityLow = 0,
-		kIntensityHigh = 1
-	};
-
-	void setCGAPalette(int palIndex, CGAIntensity intensity);
-
-	/**
-	 * Load a AMIGA palette from the given stream.
-	 */
-	void loadAmigaPalette(Common::ReadStream &stream, int startIndex, int colors);
-
-	/**
-	 * Load a PC98 16 color palette from the given stream.
-	 */
-	void loadPC98Palette(Common::ReadStream &stream, int startIndex, int colors);
 
 	/**
 	 * Return the number of colors this palette manages.
@@ -433,13 +314,6 @@ public:
 	 */
 	void copy(const uint8 *source, int firstCol, int numCols, int dstStart = -1);
 
-	/**
-	 * Fetch a RGB palette.
-	 *
-	 * @return a pointer to the RGB palette data, the client must delete[] it.
-	 */
-	uint8 *fetchRealPalette() const;
-
 	//XXX
 	uint8 &operator[](const int index) {
 		assert(index >= 0 && index <= _numColors * 3);
@@ -462,11 +336,6 @@ public:
 private:
 	uint8 *_palData;
 	const int _numColors;
-
-	static const uint8 _egaColors[];
-	static const int _egaNumColors;
-	static const uint8 _cgaColors[4][12];
-	static const int _cgaNumColors;
 };
 
 class Screen {
@@ -474,11 +343,8 @@ public:
 	enum {
 		SCREEN_W = 320,
 		SCREEN_H = 200,
-		SCREEN_H_SEGA_NTSC = 224,
 		SCREEN_PAGE_SIZE = 320 * 200 + 1024,
-		SCREEN_OVL_SJIS_SIZE = 640 * 400,
 		SCREEN_PAGE_NUM = 16,
-		SCREEN_OVLS_NUM = 6,
 
 		SCREEN_IDLEREFRESH_RESTART_MSEC = 250,
 		SCREEN_IDLEREFRESH_RATE_MSEC = 16
@@ -513,12 +379,7 @@ public:
 		FID_BOOKFONT_FNT,
 		FID_GOLDFONT_FNT,
 		FID_INTRO_FNT,
-		FID_SJIS_FNT,
-		FID_SJIS_TEXTMODE_FNT,
-		FID_SJIS_LARGE_FNT,
-		FID_SJIS_SMALL_FNT,
 		FID_CHINESE_FNT,
-		FID_KOREAN_FNT,
 		FID_NUM
 	};
 
@@ -528,7 +389,6 @@ public:
 	// init
 	virtual bool init();
 	virtual Common::Error setResolution();
-	virtual void enableHiColorMode(bool enabled);
 
 	// refresh
 	int updateScreen();
@@ -549,7 +409,6 @@ public:
 
 	// page 0 functions
 	void copyToPage0(int y, int h, uint8 page, uint8 *seqBuf);
-	void shakeScreen(int times);
 
 	// page functions
 	void copyRegion(int x1, int y1, int x2, int y2, int w, int h, int srcPage, int dstPage, int flags=0);
@@ -563,20 +422,12 @@ public:
 
 	void clearPage(int pageNum);
 
-	int getPagePixel(int pageNum, int x, int y) {
-		assert(_getPagePixelProc);
-		return (this->*_getPagePixelProc)(pageNum, x, y);
-	}
-	void setPagePixel(int pageNum, int x, int y, uint8 color) {
-		assert(_setPagePixelProc);
-		(this->*_setPagePixelProc)(pageNum, x, y, color);
-	}
+	int getPagePixel(int pageNum, int x, int y);
+	void setPagePixel(int pageNum, int x, int y, uint8 color);
 
 	const uint8 *getCPagePtr(int pageNum) const;
 	uint8 *getPageRect(int pageNum, int x, int y, int w, int h);
 
-	// palette handling
-	void fadeFromBlack(int delay=0x54, const UpdateFunctor *upFunc = 0);
 	void fadeToBlack(int delay=0x54, const UpdateFunctor *upFunc = 0);
 
 	virtual void fadePalette(const Palette &pal, int delay, const UpdateFunctor *upFunc = 0);
@@ -585,16 +436,6 @@ public:
 
 	void setPaletteIndex(uint8 index, uint8 red, uint8 green, uint8 blue);
 	virtual void setScreenPalette(const Palette &pal);
-
-	// SegaCD version
-	// This is a somewhat hacky but probably least invasive way to
-	// move the whole ingame screen output down a couple of lines.
-	void transposeScreenOutputY(int yAdd);
-
-	// AMIGA version only
-	bool isInterfacePaletteEnabled() const { return _dualPaletteModeSplitY; }
-	void enableDualPaletteMode(int splitY);
-	void disableDualPaletteMode();
 
 	virtual void getRealPalette(int num, uint8 *dst);
 	Palette &getPalette(int num);
@@ -616,13 +457,11 @@ public:
 	int getCharWidth(uint16 c) const;
 	int getCharHeight(uint16 c) const;
 	int getTextWidth(const char *str, bool nextWordOnly = false);
-	int getNumberOfCharacters(const char *str);
 
 	void printText(const char *str, int x, int y, uint8 color1, uint8 color2, int pitch = -1);
 
 	virtual void setTextColorMap(const uint8 *cmap) = 0;
 	void setTextColor(const uint8 *cmap, int a, int b);
-	void setTextColorHiCol(const uint32 *cmap);
 	int setFontStyles(FontId fontId, int styles);
 
 	const ScreenDim *getScreenDim(int dim) const;
@@ -634,17 +473,10 @@ public:
 
 	void setTextMarginRight(int x) { _textMarginRight = x; }
 	uint16 _textMarginRight;
-	bool _overdrawMargin;
 
 	const ScreenDim *_curDim;
 
 	Common::String _lineBreakChars;
-
-	// shape handling
-	uint8 *encodeShape(int x, int y, int w, int h, int flags);
-
-	int setNewShapeHeight(uint8 *shape, int height);
-	int resetShapeHeight(uint8 *shape);
 
 	virtual void drawShape(uint8 pageNum, const uint8 *shapeData, int x, int y, int sd, int flags, ...);
 
@@ -657,8 +489,6 @@ public:
 	// rect handling
 	virtual int getRectSize(int w, int h) = 0;
 
-	void rectClip(int &x, int &y, int w, int h);
-
 	// misc
 	virtual void loadBitmap(const char *filename, int tempPage, int dstPage, Palette *pal, bool skip=false);
 
@@ -667,8 +497,6 @@ public:
 	virtual void loadPalette(const byte *data, Palette &pal, int bytes);
 
 	void setAnimBlockPtr(int size);
-
-	void setShapePages(int page1, int page2, int minY = -1, int maxY = 201);
 
 	virtual byte getShapeFlag1(int x, int y);
 	virtual byte getShapeFlag2(int x, int y);
@@ -690,13 +518,10 @@ public:
 	static void decodeFrame1(const uint8 *src, uint8 *dst, uint32 size);
 	static uint16 decodeEGAGetCode(const uint8 *&pos, uint8 &nib);
 
-	static void decodeFrame3(const uint8 *src, uint8 *dst, uint32 size, bool isAmiga);
+	static void decodeFrame3(const uint8 *src, uint8 *dst, uint32 size);
 	static uint decodeFrame4(const uint8 *src, uint8 *dst, uint32 dstSize);
 	static void decodeFrameDelta(uint8 *dst, const uint8 *src, bool noXor = false);
 	static void decodeFrameDeltaPage(uint8 *dst, const uint8 *src, const int pitch, bool noXor);
-
-	static void convertAmigaGfx(uint8 *data, int w, int h, int depth = 5, bool wsa = false, int bytesPerPlane = -1);
-	static void convertAmigaMsc(uint8 *data);
 
 	// This seems to be a variant of shuffleScreen (which is used in LoK). At the time of coding (and long after that) the
 	// fact that this is a double implementation went unnoticed. My - admittedly limited - efforts to get rid of one of these
@@ -704,99 +529,33 @@ public:
 	// specifc purpose (LoK for shuffleScreen, EoB/LoL for crossFadeRegion). Merging these methods has no priority, since we
 	// can well afford the 20 lines of extra code.
 	void crossFadeRegion(int x1, int y1, int x2, int y2, int w, int h, int srcPage, int dstPage);
-
-	const void *getHiColorPalette() const { return _hiColorNativePalettes; }
-	void set16bitShadingLevel(int lvl) { _hiColorShadingLevel = lvl; }
-
 protected:
 	void resetPagePtrsAndBuffers(int pageSize);
 	uint8 *getPagePtr(int pageNum);
 	virtual void updateDirtyRects();
-	void updateDirtyRectsAmiga();
-	void updateDirtyRectsOvl();
-
-	template<typename srcPixelType, typename dstPixelType> void scale2x(uint8 *dst, int dstPitch, const uint8 *src, int srcPitch, int w, int h);
-	template<typename pixelType> void mergeOverlayImpl(int x, int y, int w, int h);
-	virtual void mergeOverlay(int x, int y, int w, int h) {
-		assert(_mergeOverlayProc);
-		(this->*_mergeOverlayProc)(x, y, w, h);
-	}
-
-	// overlay specific
-	byte *getOverlayPtr(int pageNum);
-	void clearOverlayPage(int pageNum);
-	void clearOverlayRect(int pageNum, int x, int y, int w, int h);
-	void copyOverlayRegion(int x, int y, int x2, int y2, int w, int h, int srcPage, int dstPage);
 
 	// font/text specific
 	uint16 fetchChar(const char *&s) const;
 	void drawChar(uint16 c, int x, int y, int pitch = -1);
 
-	int16 encodeShapeAndCalculateSize(uint8 *from, uint8 *to, int size);
-
 	template<bool noXor> static void wrapped_decodeFrameDelta(uint8 *dst, const uint8 *src);
 	template<bool noXor> static void wrapped_decodeFrameDeltaPage(uint8 *dst, const uint8 *src, const int pitch);
 
-	typedef void (Screen::*MergeOverlayFunc)(int, int, int, int);
-	MergeOverlayFunc _mergeOverlayProc;
-	static const MergeOverlayFunc _mergeOverlayProcs[];
-	typedef void (Screen::*Scale2xFunc)(uint8*, int, const uint8*, int, int, int);
-	Scale2xFunc _scale2xProc;
-	static const Scale2xFunc _scale2xProcs[];
-
-	template<typename T> int getPagePixelImpl(int pageNum, int x, int y);
-	template<typename T> void setPagePixelImpl(int pageNum, int x, int y, uint8 color);
-
-	typedef int (Screen::*GetPagePixelProc)(int, int, int);
-	GetPagePixelProc _getPagePixelProc;
-	static const GetPagePixelProc _getPagePixelProcs[];
-	typedef void (Screen::*SetPagePixelProc)(int, int, int, uint8);
-	SetPagePixelProc _setPagePixelProc;
-	static const SetPagePixelProc _setPagePixelProcs[];
-
 	uint8 *_pagePtrs[16];
 	const uint8 *_pagePtrsBuff;
-	uint8 *_sjisOverlayPtrs[SCREEN_OVLS_NUM];
 	uint8 _pageMapping[SCREEN_PAGE_NUM];
 
-	bool _useOverlays;
-	bool _useSJIS;
 	int _fontStyles;
 
 	Font *_fonts[FID_NUM];
 	uint8 _textColorsMap[16];
-	uint32 _textColorsMapHiCol[2];
-
-	uint8 *_textRenderBuffer;
-	int _textRenderBufferSize;
-
-	Common::SharedPtr<Graphics::FontSJIS> _sjisFontShared;
-	uint8 _sjisInvisibleColor;
-	bool _sjisMixedFontMode;
 
 	// colors/palette specific
-	bool _use16ColorMode;
-	bool _4bitPixelPacking;
-	bool _useHiResEGADithering;
-	Graphics::PixelFormat _outputPixelFormat;
-	bool _isAmiga;
-	bool _useAmigaExtraColors;
-	bool _isSegaCD;
-	Common::RenderMode _renderMode;
-	int _internalBytesPerPixel;
 	int _screenPageSize;
-	const int _screenHeight;
-	int _yTransOffs;
 
 	Palette *_screenPalette;
 	Common::Array<Palette *> _palettes;
 	Palette *_internFadePalette;
-
-	uint32 shadeRGBColor(uint32 col);
-
-	void *_hiColorNativePalettes;
-	void *_hiColorConversionPalette;
-	uint8 _hiColorShadingLevel;
 
 	uint8 *_animBlockPtr;
 	int _animBlockSize;
@@ -810,8 +569,6 @@ protected:
 	// mouse handling
 	int _mouseLockCount;
 	const uint8 _cursorColorKey;
-
-	virtual void postProcessCursor(uint8 *data, int w, int h, int pitch) {}
 
 	enum {
 		kMaxDirtyRects = 50
@@ -881,9 +638,6 @@ protected:
 	int _drawShapeVar3;
 	int _drawShapeVar4;
 	int _drawShapeVar5;
-
-	// AMIGA version
-	int _dualPaletteModeSplitY;
 
 	// debug
 	bool _debugEnabled;

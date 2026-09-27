@@ -196,7 +196,6 @@ void GUI_v1::processHighlights(Menu &menu) {
 
 		if (mouseX > x1 && mouseX < x2 &&
 		        mouseY > y1 && mouseY < y2) {
-
 			menu.highlightedItem = i;
 			redrawHighlight(menu);
 		}
@@ -241,11 +240,6 @@ void GUI_v1::redrawHighlight(const Menu &menu) {
 	printMenuText(getMenuItemTitle(menu.item[i]), textX, textY, menu.item[i].highlightColor, 0, 8);
 }
 
-void GUI_v1::updateAllMenuButtons() {
-	for (Button *cur = _menuButtonList; cur; cur = cur->nextButton)
-		updateMenuButton(cur);
-}
-
 void GUI_v1::updateMenuButton(Button *button) {
 	if (!_displayMenu)
 		return;
@@ -278,10 +272,7 @@ int GUI_v1::redrawButtonCallback(Button *button) {
 	if (!_displayMenu)
 		return 0;
 
-	if (_vm->gameFlags().platform == Common::kPlatformAmiga)
-		_screen->drawBox(button->x + 1, button->y + 1, button->x + button->width - 1, button->y + button->height - 1, 17);
-	else
-		_screen->drawBox(button->x + 1, button->y + 1, button->x + button->width - 1, button->y + button->height - 1, 0xF8);
+	_screen->drawBox(button->x + 1, button->y + 1, button->x + button->width - 1, button->y + button->height - 1, 0xF8);
 
 	return 0;
 }
@@ -290,61 +281,9 @@ int GUI_v1::redrawShadedButtonCallback(Button *button) {
 	if (!_displayMenu)
 		return 0;
 
-	if (_vm->gameFlags().platform == Common::kPlatformAmiga)
-		_screen->drawShadedBox(button->x, button->y, button->x + button->width, button->y + button->height, 31, 18);
-	else
-		_screen->drawShadedBox(button->x, button->y, button->x + button->width, button->y + button->height, 0xF9, 0xFA);
+	_screen->drawShadedBox(button->x, button->y, button->x + button->width, button->y + button->height, 0xF9, 0xFA);
 
 	return 0;
-}
-
-void GUI_v1::checkTextfieldInput() {
-	Common::Event event;
-
-	uint32 now = _vm->_system->getMillis();
-
-	bool running = true;
-	int keys = 0;
-	while (_vm->_eventMan->pollEvent(event) && running) {
-		switch (event.type) {
-		case Common::EVENT_KEYDOWN:
-			if (event.kbd.keycode == Common::KEYCODE_q && event.kbd.hasFlags(Common::KBD_CTRL))
-				_vm->quitGame();
-			else
-				_keyPressed = event.kbd;
-			running = false;
-			break;
-
-		case Common::EVENT_LBUTTONDOWN:
-		case Common::EVENT_LBUTTONUP: {
-			Common::Point pos = _vm->getMousePos();
-			_vm->_mouseX = pos.x;
-			_vm->_mouseY = pos.y;
-			keys = event.type == Common::EVENT_LBUTTONDOWN ? 199 : (200 | 0x800);
-			running = false;
-			} break;
-
-		case Common::EVENT_MOUSEMOVE: {
-			Common::Point pos = _vm->getMousePos();
-			_vm->_mouseX = pos.x;
-			_vm->_mouseY = pos.y;
-
-			_screen->updateBackendScreen(true);
-			_lastScreenUpdate = now;
-			} break;
-
-		default:
-			break;
-		}
-	}
-
-	if (now - _lastScreenUpdate > 50) {
-		_screen->updateBackendScreen(true);
-		_lastScreenUpdate = now;
-	}
-
-	processButtonList(_menuButtonList, keys | 0x8000, 0);
-	_vm->_system->delayMillis(3);
 }
 
 void GUI_v1::printMenuText(const Common::String &str, int x, int y, uint8 c0, uint8 c1, uint8 c2) {
@@ -553,9 +492,6 @@ void MainMenu::printString(const char *format, int x, int y, int col1, int col2,
 
 	if (flags & 2)
 		x -= _screen->getTextWidth(cstr);
-
-	if (_vm->gameFlags().use16ColorMode)
-		flags &= 3;
 
 	if (flags & 4) {
 		_screen->printText(cstr, x - 1, y, _static.altColor, col2);

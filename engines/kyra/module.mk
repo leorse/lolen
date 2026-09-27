@@ -39,11 +39,9 @@ MODULE_OBJS := \
 	sequence/sequences_lol.o \
 	sound/sound.o \
 	sound/sound_lol.o \
-	sound/sound_pc98_v2.o \
 	sound/sound_pc_midi.o \
 	sound/sound_pc_v1.o \
 	sound/drivers/adlib.o \
-	sound/drivers/audstream.o \
 	sound/drivers/pcspeaker_v2.o \
 	text/text.o \
 	text/text_lol.o \

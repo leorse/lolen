@@ -87,10 +87,7 @@ TIMInterpreter::TIMInterpreter(KyraEngine_v1 *engine, Screen_v2 *screen_v2, OSys
 	_textDisplayed = false;
 	_textAreaBuffer = new uint8[320*40];
 	assert(_textAreaBuffer);
-	if (_vm->gameFlags().platform == Common::kPlatformPC98 || _vm->gameFlags().isDemo)
-		_drawPage2 = 0;
-	else
-		_drawPage2 = 8;
+	_drawPage2 = 8;
 
 	_animator = new TimAnimator(nullptr, screen_v2, nullptr, false);
 
@@ -265,18 +262,6 @@ int TIMInterpreter::exec(TIM *tim, bool loop) {
 	return _currentTim->clickedButton;
 }
 
-void TIMInterpreter::refreshTimersAfterPause(uint32 elapsedTime) {
-	if (!_currentTim)
-		return;
-
-	for (int i = 0; i < TIM::kCountFuncs; i++) {
-		if (_currentTim->func[i].lastTime)
-			_currentTim->func[i].lastTime += elapsedTime;
-		if (_currentTim->func[i].nextTime)
-			_currentTim->func[i].nextTime += elapsedTime;
-	}
-}
-
 void TIMInterpreter::displayText(uint16 textId, int16 flags) {
 	char *text = getTableEntry(textId);
 
@@ -299,21 +284,18 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags) {
 			memcpy(filename, text+1, end-1-text);
 	}
 
-	const bool sjisMode = (_vm->gameFlags().lang == Common::JA_JPN && _vm->gameFlags().use16ColorMode);
 	if (filename[0] && (_vm->speechEnabled() || !_vm->gameFlags().isTalkie))
 		_vm->sound()->voicePlay(filename, nullptr, 255, 255, !_vm->gameFlags().isTalkie);
 
 	if (text[0] == '$')
 		text = strchr(text + 1, '$') + 1;
 
-	if (!_vm->gameFlags().use16ColorMode)
-		setupTextPalette((flags < 0) ? 1 : flags, 0);
+	setupTextPalette((flags < 0) ? 1 : flags, 0);
 
 	if (flags < 0) {
 		static const uint8 colorMap[] = { 0x00, 0xF0, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-		_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT :
-				 sjisMode ? Screen::FID_SJIS_TEXTMODE_FNT : Screen::FID_8_FNT);
+		_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT : Screen::FID_8_FNT);
 		_screen->setTextColorMap(colorMap);
 		_screen->_charSpacing = -2;
 	}
@@ -338,12 +320,7 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags) {
 		int width = _screen->getTextWidth(str);
 
 		if (flags >= 0) {
-			if (_vm->gameFlags().use16ColorMode) {
-				static const uint8 colorMap[] = { 0xE1, 0xE1, 0xC1, 0xA1, 0x81, 0x61 };
-				_screen->printText(str, (320 - width) >> 1, 160 + heightAdd, colorMap[flags], 0x00);
-			} else {
-				_screen->printText(str, (320 - width) >> 1, 160 + heightAdd, 0xF0, 0x00);
-			}
+			_screen->printText(str, (320 - width) >> 1, 160 + heightAdd, 0xF0, 0x00);
 		} else {
 			_screen->printText(str, (320 - width) >> 1, 188, 0xF0, 0x00);
 		}
@@ -362,8 +339,7 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags) {
 	if (flags < 0) {
 		static const uint8 colorMap[] = { 0x00, 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0x00, 0x00, 0x00, 0x00 };
 
-		_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT :
-				 sjisMode ? Screen::FID_SJIS_TEXTMODE_FNT : Screen::FID_INTRO_FNT);
+		_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT : Screen::FID_INTRO_FNT);
 		_screen->setTextColorMap(colorMap);
 		_screen->_charSpacing = 0;
 	}
@@ -381,14 +357,12 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags, uint8 color) {
 	if (flags == 255)
 		return;
 
-	_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT :
-			 (_vm->gameFlags().lang == Common::JA_JPN && _vm->gameFlags().use16ColorMode) ? Screen::FID_SJIS_TEXTMODE_FNT : Screen::FID_INTRO_FNT);
+	_screen->setFont(_vm->gameFlags().lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT : Screen::FID_INTRO_FNT);
 
 	static const uint8 colorMap[] = { 0x00, 0xA0, 0xA1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	_screen->setTextColorMap(colorMap);
 	_screen->_charSpacing = 0;
-	if (!_vm->gameFlags().use16ColorMode)
-		_screen->_lineSpacing = -4;
+	_screen->_lineSpacing = -4;
 
 	if (!flags)
 		_screen->copyRegionToBuffer(0, 0, 0, 320, 40, _textAreaBuffer);
@@ -396,17 +370,6 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags, uint8 color) {
 	char backupChar = 0;
 	char *str = text;
 	int y = 0;
-
-	if (_vm->gameFlags().use16ColorMode) {
-		if (color == 0xDA)
-			color = 0xA1;
-		else if (color == 0xF2)
-			color = 0xE1;
-		else if (flags < 0)
-			color = 0xE1;
-		else
-			color = 0xC1;
-	}
 
 	while (str[0]) {
 		char *nextLine = strchr(str, '\r');
@@ -424,7 +387,7 @@ void TIMInterpreter::displayText(uint16 textId, int16 flags, uint8 color) {
 		else
 			_screen->printText(str, 0, y, color, 0x00);
 
-		y += (_vm->gameFlags().use16ColorMode ? 16 : (_screen->getFontHeight() - 4));
+		y += ((_screen->getFontHeight() - 4));
 		str += strlen(str);
 
 		if (backupChar) {
@@ -467,59 +430,33 @@ void TIMInterpreter::setupTextPalette(uint index, int fadePalette) {
 int TIMInterpreter::initAnimStruct(int index, const char *filename, int x, int y, int, int offscreenBuffer, uint16 wsaFlags) {
 	Movie *wsa = nullptr;
 
-	const bool isLoLDemo = _vm->gameFlags().isDemo && !_vm->gameFlags().isTalkie;
-
-	if (isLoLDemo || _vm->gameFlags().platform == Common::kPlatformPC98 || _currentTim->isLoLOutro)
+	if (_currentTim->isLoLOutro)
 		_drawPage2 = 0;
 	else
 		_drawPage2 = 8;
 
 	uint16 wsaOpenFlags = 0;
-	if (isLoLDemo) {
-		if (!(wsaFlags & 0x10))
-			wsaOpenFlags |= 1;
-	} else {
-		if (wsaFlags & 0x10)
-			wsaOpenFlags |= 2;
-		wsaOpenFlags |= 1;
+	if (wsaFlags & 0x10)
+		wsaOpenFlags |= 2;
+	wsaOpenFlags |= 1;
 
-		if (offscreenBuffer == 2)
-			wsaOpenFlags = 1;
-	}
+	if (offscreenBuffer == 2)
+		wsaOpenFlags = 1;
 
 	Common::String file = Common::String::format("%s.WSA", filename);
 
 	if (_vm->resource()->exists(file.c_str())) {
-		if (isLoLDemo)
-			wsa = new WSAMovie_v1(_vm);
-		else
-			wsa = new WSAMovie_v2(_vm);
+		wsa = new WSAMovie_v2(_vm);
 		assert(wsa);
 
 		wsa->open(file.c_str(), wsaOpenFlags, (index == 1) ? &_screen->getPalette(0) : nullptr);
 	}
 
 	if (wsa && wsa->opened()) {
-		if (isLoLDemo) {
-			if (x == -1) {
-				int16 t = int8(320 - wsa->width());
-				uint8 v = int8(t & 0x00FF) - int8((t & 0xFF00) >> 8);
-				v >>= 1;
-				x = v;
-			}
-
-			if (y == -1) {
-				int16 t = int8(200 - wsa->height());
-				uint8 v = int8(t & 0x00FF) - int8((t & 0xFF00) >> 8);
-				v >>= 1;
-				y = v;
-			}
-		} else {
-			if (x == -1)
-				x = 0;
-			if (y == -1)
-				y = 0;
-		}
+		if (x == -1)
+			x = 0;
+		if (y == -1)
+			y = 0;
 
 		if (wsaFlags & 2) {
 			_screen->fadePalette(_screen->getPalette(1), 15, nullptr);
@@ -918,26 +855,20 @@ int TIMInterpreter_LoL::initAnimStruct(int index, const char *filename, int x, i
 		wsa->open(file.c_str(), wsaOpenFlags, &_screen->getPalette(3));
 	}
 
-	if (!_vm->_flags.use16ColorMode) {
-		if (wsaFlags & 1) {
-			if (_screen->_fadeFlag != 1)
-				_screen->fadeClearSceneWindow(10);
-			_screen->getPalette(3).copy(_screen->getPalette(0), 128, 128);
-		} else if (wsaFlags & 2) {
-			_screen->fadeToBlack(10);
-		}
+	if (wsaFlags & 1) {
+		if (_screen->_fadeFlag != 1)
+			_screen->fadeClearSceneWindow(10);
+		_screen->getPalette(3).copy(_screen->getPalette(0), 128, 128);
+	} else if (wsaFlags & 2) {
+		_screen->fadeToBlack(10);
 	}
 
 	if (wsa && (wsaFlags & 7))
 		wsa->displayFrame(0, 0, x, y, 0, 0, 0);
 
 	if (wsaFlags & 3) {
-		if (_vm->_flags.use16ColorMode) {
-			_vm->setPaletteBrightness(_screen->getPalette(0), _vm->_brightness, _vm->_lampEffect);
-		} else {
-			_screen->loadSpecialColors(_screen->getPalette(3));
-			_screen->fadePalette(_screen->getPalette(3), 10);
-		}
+		_screen->loadSpecialColors(_screen->getPalette(3));
+		_screen->fadePalette(_screen->getPalette(3), 10);
 		_screen->_fadeFlag = 0;
 	}
 

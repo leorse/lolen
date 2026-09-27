@@ -29,7 +29,7 @@
 
 namespace Kyra {
 
-Resource::Resource(KyraEngine_v1 *vm) : _archiveCache(), _files(), _archiveFiles(), _protectedFiles(), _loaders(), _vm(vm), _bigEndianPlatForm(vm->gameFlags().platform == Common::kPlatformAmiga || vm->gameFlags().platform == Common::kPlatformSegaCD) {
+Resource::Resource(KyraEngine_v1 *vm) : _archiveCache(), _files(), _archiveFiles(), _protectedFiles(), _loaders(), _vm(vm) {
 	initializeLoaders();
 
 	// Initialize directories for playing with the original directory structure
@@ -61,7 +61,7 @@ bool Resource::reset() {
 	if (_vm->gameFlags().useInstallerPackage)
 		_files.add("installer", loadInstallerArchive("WESTWOOD", "%d", 0), 2, false);
 
-	if (!_vm->gameFlags().isTalkie && !_vm->gameFlags().isDemo) {
+	if (!_vm->gameFlags().isTalkie) {
 		static const char *const list[] = {
 			"GENERAL.PAK", nullptr
 		};
@@ -120,12 +120,7 @@ bool Resource::loadFileList(const Common::Path &filedata) {
 
 		if (filename.hasSuffix(".PAK")) {
 			Common::Path path(filename);
-			if (!exists(path) && _vm->gameFlags().isDemo) {
-				// the demo version supplied with Kyra3 does not
-				// contain all pak files listed in filedata.fdt
-				// so we don't do anything here if they are non
-				// existent.
-			} else if (!loadPakFile(path)) {
+			if (!loadPakFile(path)) {
 				delete f;
 				error("couldn't load file '%s'", filename.c_str());
 				return false;   // for compilers that don't support NORETURN
@@ -183,12 +178,6 @@ void Resource::unloadPakFile(const Common::String &name, bool remFromCache) {
 			}
 		}
 	}
-}
-
-bool Resource::isInPakList(const Common::String &name) {
-	Common::String nameFixed(name);
-	nameFixed.toUppercase();
-	return (_archiveFiles.hasArchive(nameFixed) || _protectedFiles.hasArchive(nameFixed));
 }
 
 bool Resource::isInCacheList(const Common::String &name) {
@@ -250,18 +239,8 @@ bool Resource::loadFileToBuf(const Common::Path &file, void *buf, uint32 maxSize
 	return true;
 }
 
-Common::Archive *Resource::getCachedArchive(const Common::String &file) const {
-	ArchiveMap::iterator a = _archiveCache.find(file);
-	return a != _archiveCache.end() ? a->_value : 0;
-}
-
 Common::SeekableReadStream *Resource::createReadStream(const Common::Path &file) {
 	return _files.createReadStreamForMember(file);
-}
-
-Common::SeekableReadStreamEndian *Resource::createEndianAwareReadStream(const Common::Path &file, int endianness) {
-	Common::SeekableReadStream *stream = _files.createReadStreamForMember(file);
-	return stream ? new Common::SeekableReadStreamEndianWrapper(stream, (endianness == kForceBE) ? true : (endianness == kForceLE ? false : _bigEndianPlatForm), DisposeAfterUse::YES) : nullptr;
 }
 
 Common::Archive *Resource::loadArchive(const Common::String &name, Common::ArchiveMemberPtr member) {
@@ -314,7 +293,6 @@ Common::Archive *Resource::loadInstallerArchive(const Common::Path &file, const 
 
 void Resource::initializeLoaders() {
 	_loaders.push_back(LoaderList::value_type(new ResLoaderPak()));
-	_loaders.push_back(LoaderList::value_type(new ResLoaderInsMalcolm()));
 	_loaders.push_back(LoaderList::value_type(new ResLoaderTlk()));
 }
 

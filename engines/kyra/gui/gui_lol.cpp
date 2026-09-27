@@ -19,7 +19,6 @@
  *
  */
 
-
 #include "kyra/gui/gui_lol.h"
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
@@ -116,7 +115,7 @@ void LoLEngine::gui_drawScroll() {
 	if (h) {
 		_screen->copyRegion(201, 1, 17, 15, 6, h, 2, 2, Screen::CR_NO_P_CHECK);
 		_screen->copyRegion(208, 1, 89, 15, 6, h, 2, 2, Screen::CR_NO_P_CHECK);
-		_screen->fillRect(21, 15, 89, h + 15, _flags.use16ColorMode ? 0xBB : 206);
+		_screen->fillRect(21, 15, 89, h + 15, 206);
 	}
 
 	_screen->copyRegion(112, 16, 12, h + 15, 87, 14, 2, 2, Screen::CR_NO_P_CHECK);
@@ -125,7 +124,7 @@ void LoLEngine::gui_drawScroll() {
 	for (int i = 0; i < 7; i++) {
 		if (_availableSpells[i] == -1)
 			continue;
-		uint8 col = (i == _selectedSpell) ? (_flags.use16ColorMode ? 0x88 : 132) : (_flags.use16ColorMode ? 0x44 : 1);
+		uint8 col = (i == _selectedSpell) ? 132 : 1;
 		_screen->fprintString("%s", 24, y, col, 0, 0, getLangString(_spellProperties[_availableSpells[i]].spellNameCode));
 		y += 9;
 	}
@@ -138,7 +137,7 @@ void LoLEngine::gui_highlightSelectedSpell(bool mode) {
 	for (int i = 0; i < 7; i++) {
 		if (_availableSpells[i] == -1)
 			continue;
-		uint8 col = (mode && (i == _selectedSpell)) ? (_flags.use16ColorMode ? 0x88 : 132) : (_flags.use16ColorMode ? 0x44 : 1);
+		uint8 col = (mode && (i == _selectedSpell)) ? 132 : 1;
 		_screen->fprintString("%s", 24, y, col, 0, 0, getLangString(_spellProperties[_availableSpells[i]].spellNameCode));
 		y += 9;
 	}
@@ -167,10 +166,7 @@ void LoLEngine::gui_displayCharInventory(int charNum) {
 	_screen->copyRegion(80, 143, 80, 143, 232, 35, 0, 2);
 	gui_drawAllCharPortraitsWithStats();
 
-	if (_flags.use16ColorMode)
-		_screen->fprintString("%s", 156, 8, 0xE1, 0, 1, l->name);
-	else
-		_screen->fprintString("%s", 157, 9, 254, 0, 5, l->name);
+	_screen->fprintString("%s", 157, 9, 254, 0, 5, l->name);
 
 	gui_printCharInventoryStats(charNum);
 
@@ -178,7 +174,7 @@ void LoLEngine::gui_displayCharInventory(int charNum) {
 		gui_drawCharInventoryItem(i);
 
 	Screen::FontId of = _screen->setFont(_flags.lang == Common::Language::ZH_TWN ? Screen::FID_CHINESE_FNT : Screen::FID_9_FNT);
-	_screen->fprintString("%s", 182, 103, _flags.use16ColorMode ? 0xBB : 172, 0, 5, getLangString(0x4033));
+	_screen->fprintString("%s", 182, 103, 172, 0, 5, getLangString(0x4033));
 	_screen->setFont(of);
 
 	static const uint16 statusFlags[] = { 0x0080, 0x0000, 0x1000, 0x0002, 0x100, 0x0001, 0x0000, 0x0000 };
@@ -211,10 +207,7 @@ void LoLEngine::gui_displayCharInventory(int charNum) {
 				b = 1;
 		}
 
-		if (_flags.use16ColorMode)
-			gui_drawHorizontalBarGraph(154, 66 + i * 8, 34, 5, b, e, 0x88, 0);
-		else
-			gui_drawHorizontalBarGraph(154, 64 + i * 10, 34, 5, b, e, 132, 0);
+		gui_drawHorizontalBarGraph(154, 64 + i * 10, 34, 5, b, e, 132, 0);
 	}
 
 	_screen->drawClippedLine(14, 120, 194, 120, 1);
@@ -240,39 +233,25 @@ void LoLEngine::gui_printCharacterStats(int index, int redraw, int value) {
 	if (index < 2) {
 		// might
 		// protection
-		if (_flags.use16ColorMode) {
-			y = (index + 2) << 3;
-			col = 0xA1;
-			if (redraw)
-				_screen->fprintString("%s", offs + 108, y, col, 0, 0, getLangString(0x4014 + index));
-		} else {
-			y = index * fh + 22;
-			col = 158;
-			if (redraw)
-				_screen->fprintString("%s", offs + 108, y, col, 0, 4, getLangString(0x4014 + index));
-		}
+		y = index * fh + 22;
+		col = 158;
+		if (redraw)
+			_screen->fprintString("%s", offs + 108, y, col, 0, 4, getLangString(0x4014 + index));
 	} else {
 		//skills
 		int s = index - 2;
 		y = s * fh + 62;
-		if (_flags.use16ColorMode) {
-			y = (s + 8) << 3;
-			col = _characters[_selectedCharacter].flags & (0x200 << s) ? 0xE1 : 0x81;
-			if (redraw)
-				_screen->fprintString("%s", offs + 108, y, col, 0, 0, getLangString(0x4014 + index));
-		} else {
-			y = s * fh + 62;
-			col = _characters[_selectedCharacter].flags & (0x200 << s) ? 254 : 180;
-			if (redraw)
-				_screen->fprintString("%s", offs + 108, y, col, 0, 4, getLangString(0x4014 + index));
-		}
+		y = s * fh + 62;
+		col = _characters[_selectedCharacter].flags & (0x200 << s) ? 254 : 180;
+		if (redraw)
+			_screen->fprintString("%s", offs + 108, y, col, 0, 4, getLangString(0x4014 + index));
 	}
 
 	if (offs)
 		_screen->copyRegion(294, y, 182 + offs, y, 18, 8, 6, _screen->_curPage, Screen::CR_NO_P_CHECK);
 
-	Screen::FontId of = (_flags.lang == Common::JA_JPN && _flags.use16ColorMode) ? _screen->setFont(Screen::FID_SJIS_TEXTMODE_FNT) : _screen->_currentFont;
-	_screen->fprintString("%d", 200 + offs, y, col, 0, _flags.use16ColorMode ? 2 : 6, value);
+	Screen::FontId of = _screen->_currentFont;
+	_screen->fprintString("%d", 200 + offs, y, col, 0, 6, value);
 	_screen->setFont(of);
 }
 
@@ -361,17 +340,10 @@ void LoLEngine::gui_drawCharPortraitWithStats(int charNum) {
 	gui_drawBox(0, 0, 66, 34, 1, 1, -1);
 	gui_drawCharFaceShape(charNum, 0, 1, _screen->_curPage);
 
-	if (_flags.use16ColorMode) {
-		gui_drawLiveMagicBar(33, 32, _characters[charNum].magicPointsCur, 0, _characters[charNum].magicPointsMax, 5, 32, 0xAA, 0x44, 0);
-		gui_drawLiveMagicBar(39, 32, _characters[charNum].hitPointsCur, 0, _characters[charNum].hitPointsMax, 5, 32, 0x66, 0x44, 1);
-		_screen->printText(getLangString(0x4253), 33, 1, 0x99, 0);
-		_screen->printText(getLangString(0x4254), 39, 1, 0x55, 0);
-	} else {
-		gui_drawLiveMagicBar(33, 32, _characters[charNum].magicPointsCur, 0, _characters[charNum].magicPointsMax, 5, 32, 162, 1, 0);
-		gui_drawLiveMagicBar(39, 32, _characters[charNum].hitPointsCur, 0, _characters[charNum].hitPointsMax, 5, 32, 154, 1, 1);
-		_screen->printText((_flags.platform == Common::kPlatformDOS && !_flags.isTalkie) ? "M" : getLangString(0x4253), 33, 1, 160, 0);
-		_screen->printText((_flags.platform == Common::kPlatformDOS && !_flags.isTalkie) ? "H" : getLangString(0x4254), 39, 1, 152, 0);
-	}
+	gui_drawLiveMagicBar(33, 32, _characters[charNum].magicPointsCur, 0, _characters[charNum].magicPointsMax, 5, 32, 162, 1, 0);
+	gui_drawLiveMagicBar(39, 32, _characters[charNum].hitPointsCur, 0, _characters[charNum].hitPointsMax, 5, 32, 154, 1, 1);
+	_screen->printText((!_flags.isTalkie) ? "M" : getLangString(0x4253), 33, 1, 160, 0);
+	_screen->printText((!_flags.isTalkie) ? "H" : getLangString(0x4254), 39, 1, 152, 0);
 
 	int spellLevels = 0;
 	if (_availableSpells[_selectedSpell] != -1) {
@@ -418,14 +390,12 @@ void LoLEngine::gui_drawCharPortraitWithStats(int charNum) {
 
 	if (_characters[charNum].weaponHit) {
 		_screen->drawShape(_screen->_curPage, _gameShapes[_flags.isTalkie ? 34 : 32], 44, 0, 0, 0);
-		_screen->fprintString("%d", 57, 7, _flags.use16ColorMode ? 0x33 : 254, 0, 1, _characters[charNum].weaponHit);
+		_screen->fprintString("%d", 57, 7, 254, 0, 1, _characters[charNum].weaponHit);
 	}
 	if (_characters[charNum].damageSuffered)
-		_screen->fprintString("%d", 17, 28, _flags.use16ColorMode ? 0x33 : 254, 0, 1, _characters[charNum].damageSuffered);
+		_screen->fprintString("%d", 17, 28, 254, 0, 1, _characters[charNum].damageSuffered);
 
 	uint8 col = (charNum != _selectedCharacter || countActiveCharacters() == 1) ? 1 : 212;
-	if (_flags.use16ColorMode)
-		col = (charNum != _selectedCharacter || countActiveCharacters() == 1) ? 0x44 : 0x22;
 	_screen->drawBox(0, 0, 65, 33, col);
 
 	_screen->copyRegion(0, 0, _activeCharsXpos[charNum], 143, 66, 34, _screen->_curPage, cp, Screen::CR_NO_P_CHECK);
@@ -484,15 +454,15 @@ void LoLEngine::gui_drawLiveMagicBar(int x, int y, int curPoints, int unk, int m
 	if (barHeight < 1 && curPoints > 0)
 		barHeight = 1;
 
-	_screen->drawClippedLine(x - 1, y - h, x - 1, y, _flags.use16ColorMode ? 0x44 : 1);
+	_screen->drawClippedLine(x - 1, y - h, x - 1, y, 1);
 
 	if (flag) {
 		t = maxPoints >> 1;
 		if (t > curPoints)
-			col1 = _flags.use16ColorMode ? 0xBB : 144;
+			col1 = 144;
 		t = maxPoints >> 2;
 		if (t > curPoints)
-			col1 = _flags.use16ColorMode ? 0x88 : 132;
+			col1 = 132;
 	}
 
 	if (barHeight > 0)
@@ -512,7 +482,6 @@ void LoLEngine::calcCharPortraitXpos() {
 		int t = (280 - (nc * 33)) / (nc + 1);
 		for (int i = 0; i < nc; i++)
 			_activeCharsXpos[i] = i * 33 + t * (i + 1) + 10;
-
 	} else {
 		int t = (235 - (nc * 66)) / (nc + 1);
 		for (int i = 0; i < nc; i++)
@@ -521,53 +490,34 @@ void LoLEngine::calcCharPortraitXpos() {
 }
 
 void LoLEngine::gui_drawMoneyBox(int pageNum) {
-	static const uint16 moneyX256[] = { 0x128, 0x134, 0x12B, 0x131, 0x12E};
-	static const uint16 moneyY256[] = { 0x73, 0x73, 0x74, 0x74, 0x75};
-	static const uint16 moneyX16[] = { 0x127, 0x133, 0x12A, 0x130, 0x12D};
-	static const uint16 moneyY16[] = { 0x74, 0x74, 0x75, 0x75, 0x76};
+	static const uint16 moneyX[] = { 0x128, 0x134, 0x12B, 0x131, 0x12E};
+	static const uint16 moneyY[] = { 0x73, 0x73, 0x74, 0x74, 0x75};
 
 	int backupPage = _screen->_curPage;
 	_screen->_curPage = pageNum;
 
-	const uint16 *moneyX;
-	const uint16 *moneyY;
-
-	if (_flags.use16ColorMode) {
-		moneyX = moneyX16;
-		moneyY = moneyY16;
-		_screen->fillRect(291, 98, 315, 118, 0x11, pageNum);
-	} else {
-		moneyX = moneyX256;
-		moneyY = moneyY256;
-		_screen->fillRect(292, 97, 316, 118, 252, pageNum);
-	}
+	_screen->fillRect(292, 97, 316, 118, 252, pageNum);
 
 	for (int i = 0; i < 5; i++) {
 		if (!_moneyColumnHeight[i])
 			continue;
 
 		uint8 h = _moneyColumnHeight[i] - 1;
-		_screen->drawClippedLine(moneyX[i], moneyY[i], moneyX[i], moneyY[i] - h, _flags.use16ColorMode ? 1 : 0xD2);
-		_screen->drawClippedLine(moneyX[i] + 1, moneyY[i], moneyX[i] + 1, moneyY[i] - h, _flags.use16ColorMode ? 2 : 0xD1);
-		_screen->drawClippedLine(moneyX[i] + 2, moneyY[i], moneyX[i] + 2, moneyY[i] - h, _flags.use16ColorMode ? 3 : 0xD0);
-		_screen->drawClippedLine(moneyX[i] + 3, moneyY[i], moneyX[i] + 3, moneyY[i] - h, _flags.use16ColorMode ? 2 : 0xD1);
-		_screen->drawClippedLine(moneyX[i] + 4, moneyY[i], moneyX[i] + 4, moneyY[i] - h, _flags.use16ColorMode ? 1 : 0xD2);
+		_screen->drawClippedLine(moneyX[i], moneyY[i], moneyX[i], moneyY[i] - h, 0xD2);
+		_screen->drawClippedLine(moneyX[i] + 1, moneyY[i], moneyX[i] + 1, moneyY[i] - h, 0xD1);
+		_screen->drawClippedLine(moneyX[i] + 2, moneyY[i], moneyX[i] + 2, moneyY[i] - h, 0xD0);
+		_screen->drawClippedLine(moneyX[i] + 3, moneyY[i], moneyX[i] + 3, moneyY[i] - h, 0xD1);
+		_screen->drawClippedLine(moneyX[i] + 4, moneyY[i], moneyX[i] + 4, moneyY[i] - h, 0xD2);
 	}
 
 	Screen::FontId backupFont = _screen->setFont(Screen::FID_6_FNT);
-	if (_flags.use16ColorMode)
-		_screen->fprintString("%d", 304, 99, 0x33, 0, 1, _credits);
-	else
-		_screen->fprintString("%d", 305, 98, 254, 0, 1, _credits);
+	_screen->fprintString("%d", 305, 98, 254, 0, 1, _credits);
 
 	_screen->setFont(backupFont);
 	_screen->_curPage = backupPage;
 
 	if (pageNum == 6) {
-		if (_flags.use16ColorMode)
-			_screen->copyRegion(291, 98, 291, 98, 24, 20, 6, 0);
-		else
-			_screen->copyRegion(292, 97, 292, 97, 25, 22, 6, 0);
+		_screen->copyRegion(292, 97, 292, 97, 25, 22, 6, 0);
 	}
 }
 
@@ -1145,8 +1095,6 @@ int LoLEngine::clickedPortraitLeft(Button *button) {
 	_selectedCharacter = button->arg;
 	_weaponsDisabled = true;
 
-	if (_flags.use16ColorMode)
-		_screen->fillRect(112, 0, 288, 120, 0, 2);
 
 	gui_displayCharInventory(_selectedCharacter);
 	gui_enableCharInventoryButtons(_selectedCharacter);
@@ -1610,7 +1558,7 @@ int LoLEngine::clickedRestParty(Button *button) {
 	removeInputTop();
 
 	if (needHealingFlags || needMagicGainFlags) {
-		_screen->fillRect(112, 0, 288, 120, _flags.use16ColorMode ? 0x44 : 1);
+		_screen->fillRect(112, 0, 288, 120, 1);
 		gui_drawAllCharPortraitsWithStats();
 
 		_txt->printMessage(0x8000, "%s", getLangString(0x4057));
@@ -1725,7 +1673,6 @@ int LoLEngine::clickedRestParty(Button *button) {
 					}
 					upd = 6;
 				}
-
 			} else {
 				if (_characters[i].damageSuffered)
 					setframe = false;
@@ -1743,7 +1690,6 @@ int LoLEngine::clickedRestParty(Button *button) {
 		gui_drawScene(0);
 		_txt->printMessage(0x8000, "%s", getLangString(0x4059));
 		_screen->fadeToPalette1(40);
-
 	} else {
 		for (int i = 0; i < 4; i++)
 			_characters[i].flags &= 0xEFFF;
@@ -1756,7 +1702,6 @@ int LoLEngine::clickedRestParty(Button *button) {
 			}
 			_txt->printMessage(0x8000, "%s", getLangString(0x405A));
 			gui_drawAllCharPortraitsWithStats();
-
 		} else {
 			setTemporaryFaceFrameForAllCharacters(2, 4, 1);
 			_txt->printMessage(0x8000, "%s", getLangString(0x4058));
@@ -1815,7 +1760,6 @@ int LoLEngine::clickedLamp(Button *button) {
 		setHandItem(0);
 
 		_lampOilStatus += 100;
-
 	} else {
 		uint16 s = (_lampOilStatus >= 100) ? 0x4060 : ((!_lampOilStatus) ? 0x405C : (_lampOilStatus / 33) + 0x405D);
 		_txt->printMessage(0, getLangString(0x405B), getLangString(s));
@@ -2192,7 +2136,7 @@ int GUI_LoL::processButtonList(Button *buttonList, uint16 inputFlag, int8 mouseW
 }
 
 int GUI_LoL::redrawButtonCallback(Button *button) {
-	if (!_displayMenu || _vm->gameFlags().use16ColorMode)
+	if (!_displayMenu)
 		return 0;
 
 	_screen->drawBox(button->x + 1, button->y + 1, button->x + button->width - 1, button->y + button->height - 1, 225);
@@ -2200,7 +2144,7 @@ int GUI_LoL::redrawButtonCallback(Button *button) {
 }
 
 int GUI_LoL::redrawShadedButtonCallback(Button *button) {
-	if (!_displayMenu || _vm->gameFlags().use16ColorMode)
+	if (!_displayMenu)
 		return 0;
 
 	_screen->drawShadedBox(button->x, button->y, button->x + button->width, button->y + button->height, 223, 227);
@@ -2363,7 +2307,7 @@ int GUI_LoL::runMenu(Menu &menu) {
 			_screen->updateScreen();
 		}
 
-		if (_currentMenu == &_mainMenu && !_vm->gameFlags().use16ColorMode) {
+		if (_currentMenu == &_mainMenu) {
 			Screen::FontId f = _screen->setFont(Screen::FID_6_FNT);
 			_screen->fprintString("v%s", menu.x + 8, menu.y + menu.height - 12, 204, 0, 8, _vm->_versionString.c_str());
 			_screen->setFont(f);
@@ -2375,13 +2319,7 @@ int GUI_LoL::runMenu(Menu &menu) {
 			int my = d->sy - 1;
 			int mw = (d->w << 3) + 1;
 			int mh = d->h + 1;
-			if (_vm->gameFlags().use16ColorMode) {
-				_screen->drawShadedBox(mx, my, mx + mw + 1, my + mh + 1, 0xDD, 0xFF);
-				_screen->drawLine(true, mx + mw + 1, my, mh + 1, 0xCC);
-				_screen->drawLine(false, mx, my + mh + 1, mw + 2, 0xCC);
-			} else {
-				_screen->drawShadedBox(mx, my, mx + mw, my + mh, 227, 223);
-			}
+			_screen->drawShadedBox(mx, my, mx + mw, my + mh, 227, 223);
 
 			int pg = _screen->setCurPage(0);
 			_vm->_txt->clearDim(8);
@@ -2397,7 +2335,7 @@ int GUI_LoL::runMenu(Menu &menu) {
 
 			_screen->fprintString("%s", (d->sx << 3), d->sy + 2, d->col1, d->col2, 0, _saveDescription);
 			f = _screen->setFont(f);
-			_screen->fillRect((d->sx << 3) + fC, d->sy, (d->sx << 3) + fC + wW, d->sy + d->h - (_vm->gameFlags().use16ColorMode ? 2 : 1), d->col1, 0);
+			_screen->fillRect((d->sx << 3) + fC, d->sy, (d->sx << 3) + fC + wW, d->sy + d->h - 1, d->col1, 0);
 			_screen->setCurPage(pg);
 
 			// Disable keyboard keymap during text input (save menu)
@@ -2414,7 +2352,7 @@ int GUI_LoL::runMenu(Menu &menu) {
 					fC = _screen->getTextWidth(_saveDescription);
 					textCursorStatus ^= 1;
 					textCursorTimer = _vm->_system->getMillis() + 20 * _vm->_tickLength;
-					_screen->fillRect((d->sx << 3) + fC, d->sy, (d->sx << 3) + fC + wW, d->sy + d->h - (_vm->gameFlags().use16ColorMode ? 2 : 1), textCursorStatus ? d->col1 : d->col2, 0);
+					_screen->fillRect((d->sx << 3) + fC, d->sy, (d->sx << 3) + fC + wW, d->sy + d->h - 1, textCursorStatus ? d->col1 : d->col2, 0);
 					_screen->updateScreen();
 					f = _screen->setFont(f);
 				}
@@ -2424,14 +2362,14 @@ int GUI_LoL::runMenu(Menu &menu) {
 				if (!_newMenu) {
 					if (_currentMenu == &_savenameMenu) {
 						Screen::FontId f = _screen->setFont(Screen::FID_9_FNT);
-						_screen->fillRect((d->sx << 3) + fC, d->sy, (d->sx << 3) + fC + wW, d->sy + d->h - (_vm->gameFlags().use16ColorMode ? 2 : 1), d->col2, 0);
+						_screen->fillRect((d->sx << 3) + fC, d->sy, (d->sx << 3) + fC + wW, d->sy + d->h - 1, d->col2, 0);
 						fC = _screen->getTextWidth(_saveDescription);
 						while (fC >= fW) {
 							_saveDescription[strlen(_saveDescription) - 1] = 0;
 							fC = _screen->getTextWidth(_saveDescription);
 						}
 						_screen->fprintString("%s", (d->sx << 3), d->sy + 2, d->col1, d->col2, 0, _saveDescription);
-						_screen->fillRect((d->sx << 3) + fC, d->sy, (d->sx << 3) + fC + wW, d->sy + d->h - (_vm->gameFlags().use16ColorMode ? 2 : 1), textCursorStatus ? d->col1 : d->col2, 0);
+						_screen->fillRect((d->sx << 3) + fC, d->sy, (d->sx << 3) + fC + wW, d->sy + d->h - 1, textCursorStatus ? d->col1 : d->col2, 0);
 						f = _screen->setFont(f);
 						textCursorTimer = 0;
 						textCursorStatus = 0;
@@ -2479,17 +2417,7 @@ void GUI_LoL::createScreenThumbnail(Graphics::Surface &dst) {
 	uint8 *screenPal = new uint8[768];
 	_screen->getRealPalette(1, screenPal);
 
-	if (_vm->gameFlags().platform == Common::kPlatformPC98) {
-		uint8 *screen = new uint8[Screen::SCREEN_W * Screen::SCREEN_H];
-		assert(screen);
-
-		_screen->copyRegionToBuffer(7, 0, 0, 320, 200, screen);
-		Screen_LoL::convertPC98Gfx(screen, Screen::SCREEN_W, Screen::SCREEN_H, Screen::SCREEN_W);
-		::createThumbnail(&dst, screen, Screen::SCREEN_W, Screen::SCREEN_H, screenPal);
-		delete[] screen;
-	} else {
-		::createThumbnail(&dst, _screen->getCPagePtr(7), Screen::SCREEN_W, Screen::SCREEN_H, screenPal);
-	}
+	::createThumbnail(&dst, _screen->getCPagePtr(7), Screen::SCREEN_W, Screen::SCREEN_H, screenPal);
 
 	delete[] screenPal;
 }
@@ -2534,7 +2462,7 @@ void GUI_LoL::setupSaveMenuSlots(Menu &menu, int num) {
 				fC = _screen->getTextWidth(s);
 			}
 
-			if (_vm->gameFlags().lang == Common::JA_JPN || _vm->gameFlags().lang == Common::ZH_TWN) {
+			if (_vm->gameFlags().lang == Common::ZH_TWN) {
 				// Strip special characters from GMM save dialog which might get misinterpreted as 2-byte character
 				for (uint ii = 0; ii < strlen(s); ++ii) {
 					if (s[ii] < 32) // due to the signed char type this will also clean up everything >= 0x80
@@ -2566,7 +2494,7 @@ void GUI_LoL::sortSaveSlots() {
 }
 
 void GUI_LoL::printMenuText(const Common::String &str, int x, int y, uint8 c0, uint8 c1, uint8 flags) {
-	_screen->fprintString("%s", x, y, c0, c1, _vm->gameFlags().use16ColorMode ? (flags & 3) : flags , str.c_str());
+	_screen->fprintString("%s", x, y, c0, c1, flags, str.c_str());
 }
 
 int GUI_LoL::getMenuCenterStringX(const Common::String &str, int x1, int x2) {
@@ -2601,7 +2529,7 @@ int GUI_LoL::getInput() {
 		char inputKey = _keyPressed.ascii;
 		Util::convertISOToDOS(inputKey);
 
-		if ((uint8)inputKey > 31 && (uint8)inputKey < (_vm->gameFlags().lang == Common::JA_JPN ? 128 : 226)) {
+		if ((uint8)inputKey > 31 && (uint8)inputKey < 226) {
 			_saveDescription[strlen(_saveDescription) + 1] = 0;
 			_saveDescription[strlen(_saveDescription)] = inputKey;
 			inputFlag |= 0x8000;
@@ -2693,7 +2621,7 @@ int GUI_LoL::clickedSaveMenu(Button *button) {
 		TimeDate td;
 		g_system->getTimeAndDate(td);
 		// Skip character name for Japanese to prevent garbage rendering (the save description is rendered in the non-SJIS default font).
-		Common::String ts = (_vm->gameFlags().lang != Common::JA_JPN) ? Common::String::format("%s / ", _vm->_characters[0].name) : "";
+		Common::String ts = Common::String::format("%s / ", _vm->_characters[0].name);
 		Common::String lvl1 = _vm->_lastBlockDataFile.substr(0, 1);
 		Common::String lvl2 = _vm->_lastBlockDataFile.substr(1);
 		lvl1.toUppercase();
@@ -2850,7 +2778,6 @@ int GUI_LoL::clickedDeathMenu(Button *button) {
 int GUI_LoL::clickedSavenameMenu(Button *button) {
 	updateMenuButton(button);
 	if (button->arg == _savenameMenu.item[0].itemId) {
-
 		Util::convertString_KYRAtoGUI(_saveDescription, 5120 - (int)((uint8*)_saveDescription - _vm->_tempBuffer5120));
 
 		int slot = _menuResult == -2 ? getNextSavegameSlot() : _menuResult - 1;
@@ -2861,7 +2788,6 @@ int GUI_LoL::clickedSavenameMenu(Button *button) {
 		thumb.free();
 
 		_displayMenu = false;
-
 	} else if (button->arg == _savenameMenu.item[1].itemId) {
 		_newMenu = &_saveMenu;
 	}

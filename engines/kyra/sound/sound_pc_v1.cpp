@@ -25,7 +25,6 @@
 #include "common/system.h"
 #include "common/config-manager.h"
 
-
 namespace Kyra {
 
 SoundPC_v1::SoundPC_v1(KyraEngine_v1 *vm, Audio::Mixer *mixer, kType type)
@@ -37,7 +36,7 @@ SoundPC_v1::SoundPC_v1(KyraEngine_v1 *vm, Audio::Mixer *mixer, kType type)
 	_currentResourceSet = 0;
 	memset(&_resInfo, 0, sizeof(_resInfo));
 
-	_version = (_vm->gameFlags().isDemo && !_vm->gameFlags().isTalkie) ? 3 : 4;
+	_version = 4;
 
 	_type = kAdLib;
 	_driver = PCSoundDriver::createAdLib(mixer, _version);
@@ -150,8 +149,6 @@ bool SoundPC_v1::hasSoundFile(uint file) const {
 }
 
 void SoundPC_v1::loadSoundFile(uint file) {
-	if (_version == 1 && (_type == kPCSpkr || _type == kPCjr))
-		file += 1;
 	if (file < res()->fileListSize)
 		internalLoadFile(res()->fileList[file]);
 }

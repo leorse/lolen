@@ -19,7 +19,6 @@
  *
  */
 
-
 #include "kyra/engine/lol.h"
 #include "kyra/graphics/screen_lol.h"
 
@@ -220,8 +219,6 @@ Common::Error LoLEngine::loadGameState(int slot) {
 			delete[] _lvlTempData[i]->flags;
 			releaseMonsterTempData(_lvlTempData[i]);
 			releaseFlyingObjectTempData(_lvlTempData[i]);
-			releaseWallOfForceTempData(_lvlTempData[i]);
-			releaseAutoMapTempData(_lvlTempData[i]);
 			delete _lvlTempData[i];
 		}
 
@@ -508,29 +505,6 @@ Common::Error LoLEngine::saveGameStateIntern(int slot, const char *saveName, con
 
 	delete out;
 	return Common::kNoError;
-}
-
-Graphics::Surface *LoLEngine::generateSaveThumbnail() const {
-	if (_flags.platform != Common::kPlatformPC98)
-		return 0;
-
-	uint8 *screenPal = new uint8[16 * 3];
-	assert(screenPal);
-	_screen->getRealPalette(0, screenPal);
-
-	uint8 *screenBuf = new uint8[Screen::SCREEN_W * Screen::SCREEN_H];
-	assert(screenBuf);
-
-	Graphics::Surface *dst = new Graphics::Surface();
-	assert(dst);
-
-	_screen->copyRegionToBuffer(0, 0, 0, 320, 200, screenBuf);
-	Screen_LoL::convertPC98Gfx(screenBuf, Screen::SCREEN_W, Screen::SCREEN_H, Screen::SCREEN_W);
-	::createThumbnail(dst, screenBuf, Screen::SCREEN_W, Screen::SCREEN_H, screenPal);
-
-	delete[] screenBuf;
-	delete[] screenPal;
-	return dst;
 }
 
 void LoLEngine::restoreBlockTempData(int levelIndex) {

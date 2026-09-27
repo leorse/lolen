@@ -91,31 +91,14 @@ byte getLanguageID(Common::Language lang) {
 	return Common::find(iLanguageTable, ARRAYEND(iLanguageTable) - 1, lang)->value;
 }
 
-const IndexTable iPlatformTable[] = {
-	{ Common::kPlatformDOS, 0 },
-	{ Common::kPlatformAmiga, 1 },
-	{ Common::kPlatformFMTowns, 2 },
-	{ Common::kPlatformPC98, 3 },
-	{ Common::kPlatformSegaCD, 4 },
-	{ Common::kPlatformMacintosh, 5 },
-	{ -1, -1 }
-};
-
-byte getPlatformID(const GameFlags &flags) {
-	return Common::find(iPlatformTable, ARRAYEND(iPlatformTable) - 1, flags.platform)->value;
+// Platform index of DOS in the KYRA.DAT file format.
+byte getPlatformID(const GameFlags &) {
+	return 0;
 }
 
+// Special index in the KYRA.DAT file format: 1 for the CD version, 0 for the floppy version.
 byte getSpecialID(const GameFlags &flags) {
-	if (flags.isOldFloppy)
-		return 4;
-	else if (flags.isDemo && flags.isTalkie)
-		return 3;
-	else if (flags.isDemo)
-		return 2;
-	else if (flags.isTalkie)
-		return 1;
-	else
-		return 0;
+	return flags.isTalkie ? 1 : 0;
 }
 
 } // end of anonymous namespace
@@ -377,10 +360,6 @@ const void *StaticResource::getData(int id, int requesttype, int &size) {
 	return nullptr;
 }
 
-bool StaticResource::loadDummy(Common::SeekableReadStream &stream, void *&ptr, int &size) {
-	return true;
-}
-
 bool StaticResource::loadStringTable(Common::SeekableReadStream &stream, void *&ptr, int &size) {
 	uint32 count = stream.readUint32BE();
 	size = count;
@@ -418,9 +397,6 @@ bool StaticResource::loadRawDataBe16(Common::SeekableReadStream &stream, void *&
 
 	ptr = r;
 	return true;
-}
-
-void StaticResource::freeDummy(void *&ptr, int &size) {
 }
 
 void StaticResource::freeRawData(void *&ptr, int &size) {

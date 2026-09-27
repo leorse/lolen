@@ -19,7 +19,6 @@
  *
  */
 
-
 #ifndef KYRA_SCREEN_LOL_H
 #define KYRA_SCREEN_LOL_H
 
@@ -82,19 +81,13 @@ public:
 	uint8 *_grayOverlay;
 	int _fadeFlag;
 
-	// PC98 specific
-	static void convertPC98Gfx(uint8 *data, int w, int h, int pitch);
-
 private:
 	static const ScreenDim _screenDimTable256C[];
-	static const ScreenDim _screenDimTable16C[];
 	static const ScreenDim _screenDimTableZH[];
 	static const int _screenDimTableCount;
 
 	uint8 *_levelOverlays[8];
 
-	void mergeOverlay(int x, int y, int w, int h) override;
-	void postProcessCursor(uint8 *data, int width, int height, int pitch) override;
 };
 
 } // End of namespace Kyra
