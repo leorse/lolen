@@ -9,6 +9,22 @@ chaque étape** (compiler, lancer le jeu, commiter).
 
 ## Règles impératives
 
+- **Nom du projet : LolEN** (Lands of Lore ENgine). C'est un fork de ScummVM
+  avec sa propre identité.
+  - **Le moteur Kyra garde ses noms d'origine** : dossier `engines/kyra`, noms
+    de fichiers, namespace `Kyra`, classes `KyraEngine_v1`, `KyraRpgEngine`,
+    `LoLEngine`, etc. On doit toujours pouvoir retrouver l'origine Kyra.
+  - **Seules les classes qui remplacent l'infrastructure ScummVM** (point
+    d'entrée, launcher, backend/`OSystem`, configuration, sauvegardes,
+    évènements…) portent le nom **LolEN**, au moment où elles sont écrites
+    (étapes 3 et 4).
+- **Le jeu de base doit toujours pouvoir être lancé tel quel**, uniquement par
+  émulation logicielle, sans matériel spécifique : graphismes VGA d'origine, son
+  AdLib émulé (OPL, intégré, sans fichier externe), MIDI GM/MT-32 et haut-parleur
+  PC en option. L'émulateur MT-32 (munt) est conservé ; il demande les ROM MT-32
+  fournies par l'utilisateur, mais n'est jamais obligatoire. Les futurs mods
+  (musique, graphismes, contenu) sont toujours optionnels et ne doivent jamais
+  empêcher le lancement du jeu d'origine.
 - **Conserver les commentaires d'en-tête avec la licence** (bloc GPLv3
   « ScummVM - Graphic Adventure Engine … ») en tête de chaque fichier source
   conservé ou modifié. Un nouveau fichier dérivé de code ScummVM doit reprendre
@@ -142,31 +158,60 @@ traductions de fans (russe, italien, espagnol, chinois).
       dans le code)
 
 ## Étape 2 : retirer le reste de ScummVM
-- [ ] Supprimer les 145 autres dossiers `engines/*`
-- [ ] Supprimer les backends autres que SDL et Windows (`backends/platform/*`,
-      `cloud`, `networking`, `dlc`, `imgui`, `vkeybd`, `text-to-speech`,
-      `updates`, `presence`…)
-- [ ] Supprimer `po/`, les `dists/` inutiles (garder `engine-data/kyra.dat`)
-      et les `devtools` (garder `create_kyradat`)
-- [ ] Retirer de `common/`, `graphics/`, `audio/`, `image/`, `video/` et `math/`
-      ce qui n'est plus lié (en se guidant sur les erreurs de link)
-- [ ] Décider pour l'émulateur MT-32 (munt) : le garder ou non
+Méthode : la liste des fichiers utiles est calculée à partir du build (sources
+compilées et en-têtes listés dans les fichiers de dépendances `.deps/*.d`). Tout
+fichier source ni compilé ni inclus est supprimé. Le dépôt passe de 48 942 à
+environ 1 430 fichiers suivis.
+- [x] Supprimer les 145 autres dossiers `engines/*`
+- [x] Supprimer les plateformes autres que SDL/Windows (`backends/platform/*`
+      et les sous-plateformes de `backends/platform/sdl`, sauf `win32`)
+- [x] Supprimer les sources de backends non compilées (`cloud`, `dlc`, `imgui`,
+      `text-to-speech`, `presence`, `networking`, `vkeybd`…). Quelques en-têtes
+      de `networking` et `vkeybd` restent, car le launcher les inclut encore.
+- [x] Supprimer `po/`, `doc/`, `test/`, `.github/`, les `dists/` des autres
+      plateformes et les données des autres moteurs. `dists/engine-data` ne
+      garde que `kyra.dat` et les données « core » du launcher.
+- [x] Supprimer les `devtools` sauf `create_kyradat`
+- [x] Retirer de `common/`, `graphics/`, `audio/`, `image/`, `video/`, `math/`,
+      `gui/` et `base/` les sources non compilées
+- [x] Retirer du dépôt la copie de worktree `.kilo/worktrees/giddy-curtain`
+      commitée par erreur (les fichiers restent sur le disque)
+- [x] Émulateur MT-32 (munt, `audio/softsynth/mt32`) : conservé (option, ROM
+      fournies par l'utilisateur)
+- [ ] Nettoyer `dists/scummvm.rc` (sections de moteurs supprimés, thèmes du
+      launcher) : à faire avec l'étape 3 ou 4
+
+Note : l'essentiel de `common/`, `graphics/`, `image/`, `video/` et `gui/` reste
+utilisé par le launcher et l'infrastructure ScummVM. Leur réduction se fera à
+l'étape 3, quand le `main()` et le backend LolEN remplaceront `base/`, `gui/`
+et `backends/`.
 
 ## Étape 3 : remplacer l'intégration ScummVM
-- [ ] Écrire un `main()` qui crée directement `LoLEngine`, à la place de
+- [ ] Écrire un `main()` LolEN qui crée directement `LoLEngine`, à la place de
       `base/` et du launcher `gui/`
 - [ ] Remplacer la détection MD5 (`AdvancedDetector`) par une détection
       simplifiée ou des `GameFlags` fixes
-- [ ] Écrire un `OSystem` minimal sur SDL2 ou SDL3 : affichage, palette,
+- [ ] Écrire un backend LolEN minimal (classes `LolEN…`) sur SDL2 ou SDL3 : affichage, palette,
       événements, timer (`getMillis`, `delayMillis`), mixer audio, sauvegardes
-- [ ] Remplacer `ConfMan` par une configuration simple (INI à côté de l'exe)
+- [ ] Remplacer `ConfMan` par une configuration LolEN simple (INI à côté de l'exe)
 - [ ] Remplacer le keymapper par une gestion directe du clavier
 - [ ] Remplacer `GUI::Debugger` et la macro de traduction `_()` par des stubs
-- [ ] Définir les chemins propres à l'exe (`lol.ini`, `saves\` à côté de
+- [ ] Définir les chemins propres à l'exe (`lolen.ini`, `saves\` à côté de
       l'exe) pour ne plus dépendre de `%APPDATA%\ScummVM`
 
 ## Étape 4 : système de build et identité
 - [ ] Passer à CMake (retirer `/CMakeLists.txt` du `.gitignore`)
-- [ ] Renommer le projet et l'exécutable (sans utiliser « ScummVM »)
+- [ ] Nommer le projet et l'exécutable LolEN (`lolen.exe`), sans utiliser
+      « ScummVM » ; le moteur Kyra n'est pas renommé
 - [ ] Intégrer `kyra.dat` dans l'exe ou le livrer à côté
 - [ ] Rédiger le README (licence GPLv3, crédits ScummVM, données de jeu requises)
+
+## Étape 5 : mods (plus tard, toujours optionnels)
+Le jeu d'origine reste lançable sans aucun mod (voir « Règles impératives »).
+- [ ] Gestion de mods : un dossier de mod qui peut remplacer des fichiers du
+      jeu, par-dessus les PAK d'origine (le moteur passe déjà par un système
+      d'archives prioritaires, `Resource`)
+- [ ] Musique de remplacement en OGG/MP3/FLAC. Le décodeur Vorbis est déjà lié ;
+      MP3 (libmad) et FLAC demandent leurs bibliothèques.
+- [ ] Graphismes de remplacement
+- [ ] Choix du mod au lancement (ligne de commande ou configuration LolEN)

@@ -20,7 +20,7 @@ endif
 ######################################################################
 
 PLUGINS :=
-MODULES := test devtools base $(MODULES)
+MODULES := devtools base $(MODULES)
 
 -include engines/engines.mk
 
@@ -36,9 +36,7 @@ MODULES += \
 	math \
 	common \
 	common/compression \
-	common/formats \
-	po \
-	doc
+	common/formats
 
 ifdef USE_LUA
 MODULES += common/lua
